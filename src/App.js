@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef } from 'react';
 import Cookies from 'js-cookie';
 import "./index.css";
-import { SelectorIcon, PlusCircleIcon, MenuIcon } from '@heroicons/react/outline'
+import { SelectorIcon, PlusCircleIcon, MenuIcon, PencilIcon, TrashIcon } from '@heroicons/react/outline'
 
 const TAGS = {
     red: "\uD83D\uDD34",
@@ -45,20 +45,63 @@ function SearchBar(props) {
 }
 
 function TodoBox(props) {
-    const className = `flex items-center w-full h-9 p-2 space-x-1 bg-zinc-50 \
+    const [showMenu1, setShowMenu1] = useState(false);
+    const timeout = useRef(null);
+
+    const showMenu = props.showMenu !== undefined ? props.showMenu : showMenu1;
+    const setShowMenu = (value) => {
+        if (props.onShowMenu) {
+            props.onShowMenu(value);
+        }
+        setShowMenu1(value);
+    };
+
+    const className = `relative flex items-center w-full h-9 p-2 space-x-1 bg-zinc-50 \
         rounded-lg outline outline-2 outline-zinc-200 hover:outline-slate-300 \
         outline-offset-0 ${props.className || ''}`;
+
+    const onMenuShow = (value) => (event) => {
+        setShowMenu(value);
+        event.preventDefault();
+    };
+
+    const onMouseLeave = () => timeout.current = setTimeout(() => setShowMenu(false), 1000);
+    const onMouseEnter = () => {
+        if (timeout.current) {
+            clearTimeout(timeout);
+            timeout.current = null;
+        }
+    };
+
     return (
-        <div className={className}>
+        <div className={className} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
             {props.selectable && <SelectorIcon className="flex-none h-5 text-slate-400 hover:text-slate-900" />}
             {props.children}
-            <MenuIcon className="flex-none h-5 text-slate-400 hover:text-slate-900" />
+            <div className="flex static">
+                <button onClick={onMenuShow(true)}>
+                    <MenuIcon className="flex-none h-5 text-slate-400 hover:text-slate-900" />
+                </button>
+                {
+                    showMenu && <div className="absolute z-10 flex items-center h-9 p-2 -ml-2 -mt-2 space-x-1 bg-zinc-200 rounded-lg outline outline-2 outline-zinc-400 hover:outline-slate-500">
+                        <button onClick={onMenuShow(false)}>
+                            <MenuIcon className="flex-none h-5 text-slate-400 hover:text-slate-900" />
+                        </button>
+                        <button>
+                            <PencilIcon className="flex-none h-5 text-blue-300 hover:text-sky-700" />
+                        </button>
+                        <button>
+                            <TrashIcon className="flex-none h-5 text-red-900 hover:text-red-700" />
+                        </button>
+                    </div>
+                }
+            </div>
         </div>
     );
 }
 
 function TodoItem(props) {
     const item = props.item;
+
     return (
         <TodoBox selectable>
             <input
@@ -83,16 +126,18 @@ function TodoItem(props) {
 
 function TodoNew(props) {
     const [description, setDescription] = useState('');
+    const [showMenu, setShowMenu] = useState(false);
 
     const addNew = () => {
         if (!description.match(/^\s*$/)) {
             props.onNew(description);
             setDescription('');
+            setShowMenu(false);
         }
     };
 
     return (
-        <TodoBox className="my-2">
+        <TodoBox className="my-2" showMenu={showMenu} onShowMenu={setShowMenu}>
             <button onClick={addNew}>
                 <PlusCircleIcon className="flex-none h-5 mr-4 text-slate-400 hover:text-slate-900" />
             </button>
@@ -173,6 +218,12 @@ function App() {
         Cookies.set('todoList', JSON.stringify(new Array(...list.entries())), { expires: 365, path: '', sameSite: 'Lax' });
     };
 
+    const setTodoField = (field) => (key, value) => {
+        const newList = new Map(todoList.entries());
+        newList.set(key, { ...newList.get(key), [field]: value });
+        setTodoList(newList);
+    }
+
     return (
         <div className="flex justify-center w-full h-screen bg-stone-50">
             <div className="flex-none place-self-center w-96 h-3/4 space-y-4">
@@ -208,11 +259,7 @@ function App() {
                         setTodoList(newList);
                         nextKey.current += 1;
                     }}
-                    onDone={(key, done) => {
-                        const newList = new Map(todoList.entries());
-                        newList.set(key, { ...newList.get(key), done });
-                        setTodoList(newList);
-                    }}
+                    onDone={setTodoField('done')}
                 />
             </div>
         </div>
