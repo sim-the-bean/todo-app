@@ -245,12 +245,25 @@ function TodoList(props) {
 
 function App() {
     const [todoList, setTodoList1] = useState(() => {
-        return new Map(JSON.parse(Cookies.get('todoList')));
+        const todoList = Cookies.get('todoList');
+        if (todoList) {
+            return new Map(JSON.parse(todoList));
+        } else {
+            return new Map();
+        }
     });
     const [filterWords, setFilterWords] = useState([]);
     const [filterLabel, setFilterLabel] = useState(null);
 
-    const nextKey = useRef(todoList.size + 1);
+    const nextKey = useRef(() => {
+        let max = 0;
+        for (const key of todoList.keys()) {
+            if (key > max) {
+                max = key;
+            }
+        }
+        return max + 1;
+    });
     const filter = useMemo(() => {
         return {
             words: filterWords,
