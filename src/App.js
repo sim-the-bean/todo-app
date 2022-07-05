@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import "./index.css";
 import { SelectorIcon, PlusCircleIcon, MenuIcon } from '@heroicons/react/outline'
 
@@ -20,11 +20,17 @@ function SearchBar(props) {
     return (
         <div className="flex items-center w-full space-x-1">
             <input
-                className="flex-1 h-8 p-2 rounded-lg outline outline-2 outline-slate-100 hover:outline-slate-300 outline-offset-0"
+                className="flex-1 h-8 p-2 rounded-lg outline outline-2 outline-zinc-200 hover:outline-slate-300 outline-offset-0"
                 type={props.type || "text"}
                 placeholder="Search..."
+                onChange={props.onChange}
             />
-            <select className="flex-none h-9 w-12 rounded-lg bg-slate-100 hover:bg-slate-300" name="tags" id="tags">
+            <select
+                className="flex-none h-9 w-12 rounded-lg bg-zinc-200 hover:bg-gray-300"
+                name="tags"
+                id="tags"
+                onChange={props.onSelect}
+            >
                 {
                     ['none', 'red', 'green', 'blue', 'yellow'].map((color, index) => {
                         return <option value={color} key={index}>
@@ -38,8 +44,11 @@ function SearchBar(props) {
 }
 
 function TodoBox(props) {
+    const className = `flex items-center w-full h-9 p-2 space-x-1 bg-zinc-50 \
+        rounded-lg outline outline-2 outline-zinc-200 hover:outline-slate-300 \
+        outline-offset-0 ${props.className || ''}`;
     return (
-        <div className="flex items-center w-full h-9 space-x-1 rounded-lg outline outline-2 outline-slate-100 hover:outline-slate-300 outline-offset-0 p-2">
+        <div className={className}>
             {props.selectable && <SelectorIcon className="flex-none h-5 text-slate-400 hover:text-slate-900" />}
             {props.children}
             <MenuIcon className="flex-none h-5 text-slate-400 hover:text-slate-900" />
@@ -51,7 +60,12 @@ function TodoItem(props) {
     const item = props.item;
     return (
         <TodoBox selectable>
-            <input className="flex-none w-5 mx-4 rounded-md" type="checkbox" />
+            <input
+                className="flex-none w-5 mx-4 rounded-md"
+                type="checkbox"
+                checked={props.done}
+                onChange={(event) => props.onDone(item.key, event.target.checked)}
+            />
             <span className="flex-1">{item.description}</span>
             {
                 item.labels.map((color, index) => {
@@ -67,50 +81,138 @@ function TodoItem(props) {
 }
 
 function TodoNew(props) {
+    const [description, setDescription] = useState('');
+
     return (
-        <TodoBox>
-            <PlusCircleIcon className="flex-none h-5 mr-4 text-slate-400 hover:text-slate-900" />
-            <input
-                className="flex-1 h-7 p-2 rounded-md outline outline-2 outline-transparent hover:outline-slate-200 outline-offset-0"
-                type="text"
+        <TodoBox className="my-2">
+            <button
+                onClick={(event) => {
+                    props.onNew(description);
+                    setDescription('');
+                }}
             >
-            </input>
+                <PlusCircleIcon className="flex-none h-5 mr-4 text-slate-400 hover:text-slate-900" />
+            </button>
+            <input
+                className="flex-1 h-7 p-2 rounded-md outline outline-2 outline-transparent hover:outline-zinc-200 outline-offset-0"
+                type="text"
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+            />
         </TodoBox>
     );
 }
 
 function TodoList(props) {
-    const items = [
-        {
-            key: 1,
-            description: "Finish the todo-app",
-            labels: ["red"],
-        },
-        {
-            key: 2,
-            description: "Learn UI design",
-            labels: ["red", "blue"],
-        },
-    ];
+    const items = new Array(...props.list.values());
+    const filtered = items
+        .filter((item) => {
+            return !props.filter.label || item.labels.includes(props.filter.label);
+        })
+        .filter((item) => {
+            const desc = item.description.toLowerCase();
+            return props.filter.words.every((word) => desc.includes(word));
+        });
+
     return (
-        <div className="grid grid-cols-1 gap-2 w-full">
-            <TodoNew />
+        <div className="grid grid-cols-1 gap-2 w-full justify-center">
+            <TodoNew onNew={props.onNew} />
             {
-                items.map((item) => {
-                    return <TodoItem key={item.key} item={item} />;
-                })
+                filtered
+                    .filter((item) => !item.done)
+                    .map((item) => {
+                        return <TodoItem
+                            key={item.key}
+                            item={item}
+                            onDone={props.onDone}
+                        />;
+                    })
+            }
+            <div className="w-3/5 my-4 place-self-center outline outline-1 outline-zinc-200 outline-offset-0"></div>
+            {
+                filtered
+                    .filter((item) => item.done)
+                    .map((item) => {
+                        return <TodoItem
+                            done
+                            key={item.key}
+                            item={item}
+                            onDone={props.onDone}
+                        />;
+                    })
             }
         </div>
     );
 }
 
 function App() {
+    const items = new Map([
+        [1, {
+            key: 1,
+            description: "Finish the todo-app",
+            labels: ["red"],
+            done: false,
+        }],
+        [2, {
+            key: 2,
+            description: "Learn UI design",
+            labels: ["red", "blue"],
+            done: false,
+        }],
+    ]);
+
+    const nextKey = useRef(3);
+    const [list, setList] = useState(items);
+    const [filterWords, setFilterWords] = useState([]);
+    const [filterLabel, setFilterLabel] = useState(null);
+    const filter = useMemo(() => {
+        return {
+            words: filterWords,
+            label: filterLabel,
+        };
+    }, [filterLabel, filterWords]);
+
     return (
-        <div className="flex justify-center w-full h-screen">
+        <div className="flex justify-center w-full h-screen bg-stone-50">
             <div className="flex-none place-self-center w-96 h-3/4 space-y-4">
-                <h1 className="font-mono font-semibold text-3xl">Todo<span className="animate-pulse">...</span></h1>
-                <SearchBar />
-                <TodoList />
+                <h1 className="font-mono font-semibold text-3xl text-zinc-800">
+                    Todo
+                    <span className="animate-pulse">
+                        <span className="text-zinc-600">
+                            .
+                        </span>
+                        <span className="text-zinc-500">
+                            .
+                        </span>
+                        <span className="text-zinc-400">
+                            .
+                        </span>
+                    </span>
+                </h1>
+                <SearchBar
+                    onChange={(event) => setFilterWords(event.target.value.toLowerCase().split(/\s+/))}
+                    onSelect={(event) => setFilterLabel(event.target.value === 'none' ? null : event.target.value)}
+                />
+                <TodoList
+                    list={list}
+                    filter={filter}
+                    onNew={(item) => {
+                        const newList = new Map(list.entries());
+                        newList.set(nextKey.current, {
+                            key: nextKey.current,
+                            description: item,
+                            labels: [],
+                            done: false,
+                        });
+                        setList(newList);
+                        nextKey.current += 1;
+                    }}
+                    onDone={(key, done) => {
+                        const newList = new Map(list.entries());
+                        newList.set(key, { ...newList.get(key), done });
+                        setList(newList);
+                    }}
+                />
             </div>
         </div>
     );
