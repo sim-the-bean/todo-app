@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
+import Cookies from 'js-cookie';
 import "./index.css";
 import { SelectorIcon, PlusCircleIcon, MenuIcon } from '@heroicons/react/outline'
 
@@ -146,31 +147,24 @@ function TodoList(props) {
 }
 
 function App() {
-    const items = new Map([
-        [1, {
-            key: 1,
-            description: "Finish the todo-app",
-            labels: ["red"],
-            done: false,
-        }],
-        [2, {
-            key: 2,
-            description: "Learn UI design",
-            labels: ["red", "blue"],
-            done: false,
-        }],
-    ]);
-
-    const nextKey = useRef(3);
-    const [list, setList] = useState(items);
+    const [todoList, setTodoList1] = useState(() => {
+        return new Map(JSON.parse(Cookies.get('todoList')));
+    });
     const [filterWords, setFilterWords] = useState([]);
     const [filterLabel, setFilterLabel] = useState(null);
+
+    const nextKey = useRef(todoList.size + 1);
     const filter = useMemo(() => {
         return {
             words: filterWords,
             label: filterLabel,
         };
     }, [filterLabel, filterWords]);
+
+    const setTodoList = (list) => {
+        setTodoList1(list);
+        Cookies.set('todoList', JSON.stringify(new Array(...list.entries())), { expires: 365, path: '', sameSite: 'Lax' });
+    };
 
     return (
         <div className="flex justify-center w-full h-screen bg-stone-50">
@@ -194,23 +188,23 @@ function App() {
                     onSelect={(event) => setFilterLabel(event.target.value === 'none' ? null : event.target.value)}
                 />
                 <TodoList
-                    list={list}
+                    list={todoList}
                     filter={filter}
                     onNew={(item) => {
-                        const newList = new Map(list.entries());
+                        const newList = new Map(todoList.entries());
                         newList.set(nextKey.current, {
                             key: nextKey.current,
                             description: item,
                             labels: [],
                             done: false,
                         });
-                        setList(newList);
+                        setTodoList(newList);
                         nextKey.current += 1;
                     }}
                     onDone={(key, done) => {
-                        const newList = new Map(list.entries());
+                        const newList = new Map(todoList.entries());
                         newList.set(key, { ...newList.get(key), done });
-                        setList(newList);
+                        setTodoList(newList);
                     }}
                 />
             </div>
