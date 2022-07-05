@@ -89,9 +89,11 @@ function TodoBox(props) {
                         <button>
                             <PencilIcon className="flex-none h-5 text-blue-300 hover:text-sky-700" />
                         </button>
-                        <button>
-                            <TrashIcon className="flex-none h-5 text-red-900 hover:text-red-700" />
-                        </button>
+                        {
+                            props.onDelete && <button onClick={props.onDelete}>
+                                <TrashIcon className="flex-none h-5 text-red-900 hover:text-red-700" />
+                            </button>
+                        }
                     </div>
                 }
             </div>
@@ -103,7 +105,7 @@ function TodoItem(props) {
     const item = props.item;
 
     return (
-        <TodoBox selectable>
+        <TodoBox selectable onDelete={() => props.onDelete(item.key)}>
             <input
                 className="flex-none w-5 mx-4 rounded-md"
                 type="checkbox"
@@ -178,6 +180,7 @@ function TodoList(props) {
                             key={item.key}
                             item={item}
                             onDone={props.onDone}
+                            onDelete={props.onDelete}
                         />;
                     })
             }
@@ -191,6 +194,7 @@ function TodoList(props) {
                             key={item.key}
                             item={item}
                             onDone={props.onDone}
+                            onDelete={props.onDelete}
                         />;
                     })
             }
@@ -258,6 +262,11 @@ function App() {
                         });
                         setTodoList(newList);
                         nextKey.current += 1;
+                    }}
+                    onDelete={(key) => {
+                        const newList = new Map(todoList.entries());
+                        newList.delete(key);
+                        setTodoList(newList);
                     }}
                     onDone={setTodoField('done')}
                 />
