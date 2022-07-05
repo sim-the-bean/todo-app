@@ -68,7 +68,7 @@ function TodoBox(props) {
     const onMouseLeave = () => timeout.current = setTimeout(() => setShowMenu(false), 1000);
     const onMouseEnter = () => {
         if (timeout.current) {
-            clearTimeout(timeout);
+            clearTimeout(timeout.current);
             timeout.current = null;
         }
     };
