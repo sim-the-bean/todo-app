@@ -84,14 +84,16 @@ function TodoItem(props) {
 function TodoNew(props) {
     const [description, setDescription] = useState('');
 
+    const addNew = () => {
+        if (!description.match(/^\s*$/)) {
+            props.onNew(description);
+            setDescription('');
+        }
+    };
+
     return (
         <TodoBox className="my-2">
-            <button
-                onClick={(event) => {
-                    props.onNew(description);
-                    setDescription('');
-                }}
-            >
+            <button onClick={addNew}>
                 <PlusCircleIcon className="flex-none h-5 mr-4 text-slate-400 hover:text-slate-900" />
             </button>
             <input
@@ -99,6 +101,11 @@ function TodoNew(props) {
                 type="text"
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
+                onKeyDown={(event) => {
+                    if (!event.repeat && event.key === "Enter") {
+                        addNew();
+                    }
+                }}
             />
         </TodoBox>
     );
