@@ -13,8 +13,14 @@ const TAGS = {
     brown: "\uD83D\uDFE4",
 };
 
+const LABELS = ['red', 'green', 'blue', 'yellow'];
+
 function Tag(props) {
     return <>{TAGS[props.color]}</>;
+}
+
+function HorizontalDivider(props) {
+    return <div className={`w-3/5 my-4 place-self-center outline outline-1 outline-${props.color || 'zinc-200'}`}></div>;
 }
 
 function SearchBar(props) {
@@ -33,7 +39,7 @@ function SearchBar(props) {
                 onChange={props.onSelect}
             >
                 {
-                    ['none', 'red', 'green', 'blue', 'yellow'].map((color, index) => {
+                    ['none', ...LABELS].map((color, index) => {
                         return <option value={color} key={index}>
                             {color !== 'none' && <Tag color={color} />}
                         </option>;
@@ -83,11 +89,26 @@ function TodoBox(props) {
                 </button>
                 {
                     showMenu && <div className="absolute z-10 flex items-center h-9 p-2 -ml-2 -mt-2 space-x-1 bg-zinc-200 rounded-lg outline outline-2 outline-zinc-400 hover:outline-slate-500">
-                        <button onClick={onMenuShow(false)}>
+                        <button className="mr-2" onClick={onMenuShow(false)}>
                             <MenuIcon className="flex-none h-5 text-slate-400 hover:text-slate-900" />
                         </button>
+                        {
+                            LABELS.map((color) => {
+                                let className;
+                                if (props.labels.includes(color)) {
+                                    className = "transition ease-in-out delay-150 hover:scale-110 hover:animate-pulse";
+                                } else {
+                                    className = "scale-75 translate-y-1 transition ease-in-out delay-150 hover:scale-125 hover:translate-y-0 hover:animate-pulse";
+                                }
+                                return (
+                                    <button key={color} className={className} onClick={() => props.onToggleLabel(color)}>
+                                        <Tag color={color} />
+                                    </button>
+                                );
+                            })
+                        }
                         <button>
-                            <PencilIcon className="flex-none h-5 text-blue-300 hover:text-sky-700" />
+                            <PencilIcon className="flex-none ml-2 h-5 text-blue-300 hover:text-sky-700" />
                         </button>
                         {
                             props.onDelete && <button onClick={props.onDelete}>
@@ -105,7 +126,12 @@ function TodoItem(props) {
     const item = props.item;
 
     return (
-        <TodoBox selectable onDelete={() => props.onDelete(item.key)}>
+        <TodoBox
+            selectable
+            onDelete={() => props.onDelete(item.key)}
+            labels={item.labels}
+            onToggleLabel={(label) => props.onToggleLabel(item.key, label)}
+        >
             <input
                 className="flex-none w-5 mx-4 rounded-md"
                 type="checkbox"
@@ -128,18 +154,31 @@ function TodoItem(props) {
 
 function TodoNew(props) {
     const [description, setDescription] = useState('');
+    const [labels, setLabels] = useState([]);
     const [showMenu, setShowMenu] = useState(false);
 
     const addNew = () => {
         if (!description.match(/^\s*$/)) {
-            props.onNew(description);
+            props.onNew(description, labels);
             setDescription('');
+            setLabels([]);
             setShowMenu(false);
         }
     };
 
     return (
-        <TodoBox className="my-2" showMenu={showMenu} onShowMenu={setShowMenu}>
+        <TodoBox
+            className="my-2"
+            showMenu={showMenu}
+            onShowMenu={setShowMenu}
+            labels={labels}
+            onToggleLabel={(label) => {
+                if (labels.includes(label)) {
+                    setLabels(labels.filter((l) => l !== label));
+                } else {
+                    setLabels([...labels, label]);
+                }
+            }}>
             <button onClick={addNew}>
                 <PlusCircleIcon className="flex-none h-5 mr-4 text-slate-400 hover:text-slate-900" />
             </button>
@@ -181,10 +220,11 @@ function TodoList(props) {
                             item={item}
                             onDone={props.onDone}
                             onDelete={props.onDelete}
+                            onToggleLabel={props.onToggleLabel}
                         />;
                     })
             }
-            <div className="w-3/5 my-4 place-self-center outline outline-1 outline-zinc-200 outline-offset-0"></div>
+            <HorizontalDivider />
             {
                 filtered
                     .filter((item) => item.done)
@@ -195,6 +235,7 @@ function TodoList(props) {
                             item={item}
                             onDone={props.onDone}
                             onDelete={props.onDelete}
+                            onToggleLabel={props.onToggleLabel}
                         />;
                     })
             }
@@ -228,6 +269,8 @@ function App() {
         setTodoList(newList);
     }
 
+    const setTodoLabels = setTodoField('labels');
+
     return (
         <div className="flex justify-center w-full h-screen bg-stone-50">
             <div className="flex-none place-self-center w-96 h-3/4 space-y-4">
@@ -252,12 +295,12 @@ function App() {
                 <TodoList
                     list={todoList}
                     filter={filter}
-                    onNew={(item) => {
+                    onNew={(item, labels) => {
                         const newList = new Map(todoList.entries());
                         newList.set(nextKey.current, {
                             key: nextKey.current,
                             description: item,
-                            labels: [],
+                            labels: labels,
                             done: false,
                         });
                         setTodoList(newList);
@@ -269,6 +312,14 @@ function App() {
                         setTodoList(newList);
                     }}
                     onDone={setTodoField('done')}
+                    onToggleLabel={(key, label) => {
+                        const labels = todoList.get(key).labels;
+                        if (labels.includes(label)) {
+                            setTodoLabels(key, labels.filter((l) => l !== label));
+                        } else {
+                            setTodoLabels(key, [...labels, label]);
+                        }
+                    }}
                 />
             </div>
         </div>
