@@ -27,6 +27,9 @@ const LABELS = ['red', 'green', 'blue', 'yellow'];
 /** @readonly */
 const TODO_COOKIE = 'todoList';
 
+/** @readonly */
+const CONSENT_COOKIE = 'essentialCookiesConsent';
+
 /** @todo Replace unicode characters with icons. */
 function Tag(props) {
     return <>{TAGS[props.color]}</>;
@@ -102,6 +105,32 @@ function ReorderButton(props) {
             <button className="accent-transparent" onClick={() => props.onClick('down')}>
                 <ArrowNarrowDownIcon className="flex-none h-5 -ml-1 -mb-1 text-slate-400 hover:text-slate-900" />
             </button>
+        </div>
+    );
+}
+
+/**
+ * Displays a floating cookie notice.
+ * @param {{onClick: () => void}} props */
+function CookieNotice(props) {
+    return (
+        <div className="block absolute z-40 bottom-8 w-1/3 p-4 space-y-4 bg-zinc-100 rounded-3xl outline outline-2 outline-zinc-200 hover:outline-slate-300 outline-offset-0">
+            <h1 className="block font-mono font-semibold text-3xl text-zinc-800">Cookie Notice</h1>
+            <p className="block text-justify text-lg">
+                We use cookies necessary for proper function of this website. They don't contain
+                any personal data other than what you enter in the forms on this site, and they
+                are never accessible to parties other than yourself. <br />
+                By clicking the button below, you consent to the use of cookies by this website
+                and this notice won't appear again.
+            </p>
+            <div className="flex items-center justify-center w-full">
+                <button
+                    className="flex-none place-self-center h-9 py-1 px-3 bg-zinc-50 hover:drop-shadow-sm rounded-lg outline outline-2 outline-zinc-200 hover:outline-slate-300 outline-offset-0"
+                    onClick={props.onClick}
+                >
+                    <span className="hover:font-semibold">Accept essential cookies</span>
+                </button>
+            </div>
         </div>
     );
 }
@@ -357,6 +386,8 @@ function Title() {
 }
 
 function App() {
+    const [cookiesAccepted, setCookiesAccepted1] = useState(() => Cookies.get(CONSENT_COOKIE) === '1');
+
     const [todoList, setTodoList1] = useState(() => {
         const todoList = Cookies.get(TODO_COOKIE);
         if (todoList) {
@@ -381,7 +412,17 @@ function App() {
     /** @param {Map<number, Item>} list */
     const setTodoList = (list) => {
         setTodoList1(list);
-        Cookies.set(TODO_COOKIE, JSON.stringify(new Array(...list.entries())), { expires: 365, path: '', sameSite: 'Lax' });
+        if (cookiesAccepted) {
+            Cookies.set(TODO_COOKIE, JSON.stringify(new Array(...list.entries())), { expires: 365, path: '', sameSite: 'Lax' });
+        }
+    };
+
+    /** @param {bool} value */
+    const setCookiesAccepted = (value) => {
+        setCookiesAccepted1(value);
+        if (value) {
+            Cookies.set(CONSENT_COOKIE, '1', { expires: 365, path: '', sameSite: 'Lax' });
+        }
     };
 
     /** 
@@ -478,6 +519,7 @@ function App() {
                     setTodoOrdering={setTodoOrdering}
                 />
             </div>
+            {!cookiesAccepted && <CookieNotice onClick={() => setCookiesAccepted(true)} />}
         </div>
     );
 }
