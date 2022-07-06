@@ -1,26 +1,38 @@
 import React, { useState, useMemo, useRef } from 'react';
 import Cookies from 'js-cookie';
 import "./index.css";
-import { PlusCircleIcon, MenuIcon, PencilIcon, TrashIcon, ArrowNarrowDownIcon, ArrowNarrowUpIcon } from '@heroicons/react/outline'
+import { PlusCircleIcon, MenuIcon, PencilIcon, TrashIcon, ArrowNarrowDownIcon, ArrowNarrowUpIcon, TagIcon as TagIconOutline, XIcon } from '@heroicons/react/outline'
+import { TagIcon as TagIconSolid } from '@heroicons/react/solid'
 
 /** @typedef {'red'|'green'|'blue'|'yellow'} Label */
 /** @typedef {{key: number, order: number, description: string, status: bool, labels: Label[]}} Item */
 
 /** 
  * A mapping from label colour to the unicode character that represents that label.
+ * @type {{Label: {style: string, faded: string}}}
  * @readonly */
-const TAGS = {
-    red: "\uD83D\uDD34",
-    blue: "\uD83D\uDD35",
-    orange: "\uD83D\uDFE0",
-    yellow: "\uD83D\uDFE1",
-    green: "\uD83D\uDFE2",
-    purple: "\uD83D\uDFE3",
-    brown: "\uD83D\uDFE4",
+const TAG_STYLES = {
+    red: {
+        style: "flex-none h-5 text-red-600",
+        faded: "flex-none h-5 text-red-400 hover:text-red-600",
+    },
+    green: {
+        style: "flex-none h-5 text-green-600",
+        faded: "flex-none h-5 text-lime-200 hover:text-green-600",
+    },
+    blue: {
+        style: "flex-none h-5 text-sky-600",
+        faded: "flex-none h-5 text-blue-300 hover:text-sky-600",
+    },
+    yellow: {
+        style: "flex-none h-5 text-amber-400",
+        faded: "flex-none h-5 text-orange-200 hover:text-amber-400",
+    },
 };
 
 /**
  * List of labels that are presented to the user.
+ * @type {Label[]}
  * @readonly */
 const LABELS = ['red', 'green', 'blue', 'yellow'];
 
@@ -30,9 +42,11 @@ const TODO_COOKIE = 'todoList';
 /** @readonly */
 const CONSENT_COOKIE = 'essentialCookiesConsent';
 
-/** @todo Replace unicode characters with icons. */
+/**
+ * @param {{label: Label, faded: bool}} props
+ */
 function Tag(props) {
-    return <>{TAGS[props.color]}</>;
+    return <TagIconSolid className={props.faded ? TAG_STYLES[props.color].faded : TAG_STYLES[props.color].style} />;
 }
 
 /** @param {{color: ?string, className: ?string}} props */
@@ -54,7 +68,16 @@ function AddItemButton(props) {
  * @param {{onClick: () => void, className: ?string}} props */
 function DeleteButton(props) {
     return <button onClick={props.onClick}>
-        <TrashIcon className={`flex-none h-5 text-red-900 hover:text-red-700 ${props.className || ''}`} />
+        <TrashIcon className={`flex-none h-5 text-red-800 hover:text-red-500 ${props.className || ''}`} />
+    </button>;
+}
+
+/** 
+ * A generic component to represent cancel.
+ * @param {{onClick: () => void, className: ?string}} props */
+function CancelButton(props) {
+    return <button onClick={props.onClick}>
+        <XIcon className={`flex-none h-5 text-red-800 hover:text-red-500 ${props.className || ''}`} />
     </button>;
 }
 
@@ -69,18 +92,18 @@ function EditButton(props) {
 
 /** 
  * A component that toggles a label on the selected item when clicked.
- * @param {{color: string, onClick: (color: string) => void}} props */
+ * @param {{faded: bool, color: Label, onClick: (color: Label) => void}} props */
 function LabelButton(props) {
     let className;
 
-    if (props.active) {
-        className = "transition ease-in-out delay-150 hover:scale-110 hover:animate-pulse";
-    } else {
+    if (props.faded) {
         className = "scale-75 translate-y-1 transition ease-in-out delay-150 hover:scale-125 hover:translate-y-0 hover:animate-pulse";
+    } else {
+        className = "transition ease-in-out delay-50 hover:scale-110 hover:animate-pulse";
     }
 
     return <button className={className} onClick={() => props.onClick(props.color)}>
-        <Tag color={props.color} />
+        <Tag faded={props.faded} color={props.color} />
     </button>;
 }
 
@@ -88,8 +111,17 @@ function LabelButton(props) {
  * A component that opens or closes the side menu on each item.
  * @param {{sideMenu: bool, onClick: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>, value: bool) => void, className: ?string}} props */
 function MenuButton(props) {
-    return <button className={props.sideMenu ? "mr-2" : ""} onClick={(event) => props.onClick(event, !props.sideMenu)}>
-        <MenuIcon className={`flex-none h-5 text-slate-400 hover:text-slate-900 ${props.className || ''}`} />
+    return <button className={`${props.sideMenu ? 'mr-2' : ''} ${props.className || ''}`} onClick={(event) => props.onClick(event, !props.sideMenu)}>
+        <MenuIcon className="flex-none h-5 text-slate-400 hover:text-slate-900" />
+    </button>;
+}
+
+/** 
+ * A component that opens or closes the tag filter menu.
+ * @param {{sideMenu: bool, onClick: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>, value: bool) => void, className: ?string}} props */
+function FilterButton(props) {
+    return <button className={`${props.sideMenu ? 'mr-2' : ''} ${props.className || ''}`} onClick={(event) => props.onClick(event, !props.sideMenu)}>
+        <TagIconOutline className="flex-none h-5 text-slate-400 hover:text-slate-900" />
     </button>;
 }
 
@@ -137,49 +169,77 @@ function CookieNotice(props) {
 
 /** 
  * A component that allows the user to search for a phrase or filter by label.
- * @param {{type: string, onSearch: (text: string) => void, onFilter: (label: ?Label) => void}} props */
+ * @param {{onSearch: (text: string) => void, filter: ?Label, onFilter: (label: ?Label) => void}} props */
 function SearchBar(props) {
+    const [showMenu, setShowMenu] = useState(false);
+    const timeout = useRef(null);
+
+    const showTagMenu = (event, value) => {
+        setShowMenu(value);
+        event.preventDefault();
+    };
+
+    // If the mouse leaves the box (not the side menu), we disappear the box after 1 second.
+    // If during this time the mouse re-enters the box, we clear the timeout.
+    const onMouseLeave = () => timeout.current = setTimeout(() => setShowMenu(false), 1000);
+    const onMouseEnter = () => {
+        if (timeout.current) {
+            clearTimeout(timeout.current);
+            timeout.current = null;
+        }
+    };
+
     return (
-        <div className="flex items-center w-full space-x-1">
+        <div className="flex items-center w-full space-x-1" onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
             <input
                 className="flex-1 h-8 p-2 hover:drop-shadow-sm rounded-lg outline outline-2 outline-zinc-200 hover:outline-slate-300 outline-offset-0"
-                type={props.type || "text"}
+                type="search"
                 placeholder="Search..."
                 onChange={(event) => props.onSearch(event.target.value)}
             />
-            <select
-                className="flex-none h-9 w-12 hover:drop-shadow-sm rounded-lg bg-zinc-200 hover:bg-gray-300"
-                name="tags"
-                id="tags"
-                onChange={(event) => props.onFilter(event.target.value === 'none' ? null : event.target.value)}
-            >
+            <div className="flex static">
+                <FilterButton
+                    className="flex-none h-8 w-9 ml-2 p-2 hover:drop-shadow-sm rounded-lg outline outline-2 outline-zinc-200 hover:outline-slate-300 outline-offset-0"
+                    onClick={showTagMenu}
+                />
                 {
-                    ['none', ...LABELS].map((color, index) => {
-                        return <option value={color} key={index}>
-                            {color !== 'none' && <Tag color={color} />}
-                        </option>;
-                    })
+                    showMenu && <TagMenu
+                        selected={props.filter}
+                        selectLabel={(label) => props.onFilter(label === props.filter ? null : label)}
+                        showTagMenu={showTagMenu}
+                    />
                 }
-            </select>
+            </div>
         </div>
     );
 }
 
 /**
  * A component that represents the set of actions that can be performed to edit an existing item or an item being created.
- * @param {{labels: string[], editItem: () => void, deleteItem: () => void, toggleLabel: () => void, showSideMenu: () => void}} props */
+ * @param {{selected: ?Label, selectLabel: (label: Label) => void, showTagMenu: (value: bool) => void}} props */
+function TagMenu(props) {
+    return <div className="absolute z-10 flex items-center h-8 p-2 pt-3 ml-2 space-x-1 bg-zinc-200 hover:drop-shadow-lg rounded-lg outline outline-2 outline-zinc-300">
+        <FilterButton sideMenu onClick={props.showTagMenu} />
+        {LABELS.map((color) => <LabelButton key={color} color={color} faded={color !== props.selected} onClick={props.selectLabel} />)}
+        <CancelButton className="ml-1" onClick={() => props.selectLabel(null)} />
+    </div>;
+}
+
+/**
+ * A component that represents the set of actions that can be performed to edit an existing item or an item being created.
+ * @param {{labels: Label[], editItem: () => void, deleteItem: () => void, toggleLabel: (label: Label) => void, showSideMenu: () => void}} props */
 function SideMenu(props) {
     return <div className="absolute z-10 flex items-center h-9 p-2 -ml-2 -mt-2 space-x-1 bg-zinc-200 hover:drop-shadow-lg rounded-lg outline outline-2 outline-zinc-300">
         <MenuButton sideMenu onClick={props.showSideMenu} />
-        {LABELS.map((color) => <LabelButton key={color} color={color} active={props.labels.includes(color)} onClick={props.toggleLabel} />)}
+        {LABELS.map((color) => <LabelButton key={color} color={color} faded={!props.labels.includes(color)} onClick={props.toggleLabel} />)}
         {props.editItem && <EditButton className="ml-2" onClick={props.editItem} />}
-        {props.deleteItem && <DeleteButton onClick={props.deleteItem} />}
+        {props.deleteItem && <DeleteButton className={props.editItem ? "" : "ml-2"} onClick={props.deleteItem} />}
     </div>;
 }
 
 /** 
  * A wrapper component that represents an existing item on the todo list or a new item.
- * @param {{showMenu: bool, showSideMenu: () => void, labels: Label[], editItem: ?() => void, deleteItem: ?() => void, toggleLabel: () => void, setTodoOrdering: ?(direction: 'up'|'down') => void, className: ?string}} props */
+ * @param {{showMenu: bool, showSideMenu: () => void, labels: Label[], editItem: ?() => void, deleteItem: ?() => void, toggleLabel: (label: Label) => void, setTodoOrdering: ?(direction: 'up'|'down') => void, className: ?string}} props */
 function TodoBox(props) {
     const [showMenu1, setShowMenu1] = useState(false);
     const timeout = useRef(null);
@@ -482,10 +542,11 @@ function App() {
 
     return (
         <div className="flex justify-center w-full h-screen bg-stone-50">
-            <div className="flex-none place-self-center w-96 h-3/4 space-y-4">
+            <div className="flex-none place-self-center w-96 mt-48 min-h-[75%] space-y-4">
                 <Title />
                 <SearchBar
                     onSearch={(text) => setFilterWords(text.toLowerCase().split(/\s+/))}
+                    filter={filterLabel}
                     onFilter={(label) => setFilterLabel(label)}
                 />
                 <TodoList
