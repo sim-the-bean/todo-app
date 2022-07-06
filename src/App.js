@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useRef } from 'react';
 import Cookies from 'js-cookie';
 import "./index.css";
-import { SelectorIcon, PlusCircleIcon, MenuIcon, PencilIcon, TrashIcon } from '@heroicons/react/outline'
+import { PlusCircleIcon, MenuIcon, PencilIcon, TrashIcon, ArrowNarrowDownIcon, ArrowNarrowUpIcon } from '@heroicons/react/outline'
 
 /** @typedef {'red'|'green'|'blue'|'yellow'} Label */
-/** @typedef {{key: number, description: string, status: bool, labels: Label[]}} Item */
+/** @typedef {{key: number, order: number, description: string, status: bool, labels: Label[]}} Item */
 
 /** 
  * A mapping from label colour to the unicode character that represents that label.
@@ -90,6 +90,22 @@ function MenuButton(props) {
     </button>;
 }
 
+/**
+ * A component that reorders list items visually.
+ * @param {{onClick: (direction: 'up'|'down') => void}} props */
+function ReorderButton(props) {
+    return (
+        <div className="flex">
+            <button className="accent-transparent" onClick={() => props.onClick('up')}>
+                <ArrowNarrowUpIcon className="flex-none h-5 -ml-1 -mt-1 text-slate-400 hover:text-slate-900" />
+            </button>
+            <button className="accent-transparent" onClick={() => props.onClick('down')}>
+                <ArrowNarrowDownIcon className="flex-none h-5 -ml-1 -mb-1 text-slate-400 hover:text-slate-900" />
+            </button>
+        </div>
+    );
+}
+
 /** 
  * A component that allows the user to search for a phrase or filter by label.
  * @param {{type: string, onSearch: (text: string) => void, onFilter: (label: ?Label) => void}} props */
@@ -134,7 +150,7 @@ function SideMenu(props) {
 
 /** 
  * A wrapper component that represents an existing item on the todo list or a new item.
- * @param {{selectable: bool, showMenu: bool, showSideMenu: () => void, labels: Label[], editItem: () => void, deleteItem: () => void, toggleLabel: () => void, className: ?string}} props */
+ * @param {{showMenu: bool, showSideMenu: () => void, labels: Label[], editItem: ?() => void, deleteItem: ?() => void, toggleLabel: () => void, setTodoOrdering: ?(direction: 'up'|'down') => void, className: ?string}} props */
 function TodoBox(props) {
     const [showMenu1, setShowMenu1] = useState(false);
     const timeout = useRef(null);
@@ -170,7 +186,7 @@ function TodoBox(props) {
 
     return (
         <div className={className} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
-            {props.selectable && <SelectorIcon className="flex-none h-5 text-slate-400 hover:text-slate-900" />}
+            {props.setTodoOrdering && <ReorderButton onClick={props.setTodoOrdering} />}
             {props.children}
             <div className="flex static">
                 <MenuButton onClick={showSideMenu} />
@@ -231,16 +247,16 @@ function TodoNew(props) {
 
 /** 
  * A component that represents a new item to be added to the list.
- * @param {{item: Item, deleteItem: () => void, toggleLabel: (key: number, label: Label) => void, setItemStatus: (key: number, status: bool) => void}} props */
+ * @param {{item: Item, deleteItem: () => void, toggleLabel: (key: number, label: Label) => void, setItemStatus: (key: number, status: bool) => void, setTodoOrdering: (key: number, direction: 'up'|'down') => void}} props */
 function TodoItem(props) {
     const item = props.item;
 
     return (
         <TodoBox
-            selectable
             deleteItem={() => props.deleteItem(item.key)}
             labels={item.labels}
             toggleLabel={(label) => props.toggleLabel(item.key, label)}
+            setTodoOrdering={(direction) => props.setTodoOrdering(item.key, direction)}
         >
             <input
                 className="flex-none w-5 mx-4 rounded-md"
@@ -264,7 +280,7 @@ function TodoItem(props) {
 
 /** 
  * A component that represents all items on the list, sorts them by status, and filters and/or searches.
- * @param {{list: Map<number, Item>, filter: {words: string[], label: ?Label}, addNewItem: (description: string, labels: Label[]) => void, deleteItem: () => void, toggleLabel: (key: number, label: Label) => void, setItemStatus: (key: number, status: bool) => void}} props */
+ * @param {{list: Map<number, Item>, filter: {words: string[], label: ?Label}, addNewItem: (description: string, labels: Label[]) => void, deleteItem: () => void, toggleLabel: (key: number, label: Label) => void, setItemStatus: (key: number, status: bool) => void, setTodoOrdering: (key: number, direction: 'up'|'down') => void}} props */
 function TodoList(props) {
     const items = new Array(...props.list.values());
     const filtered = items
@@ -277,6 +293,7 @@ function TodoList(props) {
             const desc = item.description.toLowerCase();
             return props.filter.words.every((word) => desc.includes(word));
         })
+        .sort((a, b) => a.order - b.order)
         .map((item) => {
             return [
                 item,
@@ -286,6 +303,7 @@ function TodoList(props) {
                     setItemStatus={props.setItemStatus}
                     deleteItem={props.deleteItem}
                     toggleLabel={props.toggleLabel}
+                    setTodoOrdering={props.setTodoOrdering}
                 />
             ];
         });
@@ -377,6 +395,50 @@ function App() {
 
     const setTodoLabels = setTodoField('labels');
 
+    /** 
+     * @param {number} key
+     * @param {'up'|'down'} direction */
+    const setTodoOrdering = (key, direction) => {
+        const newList = new Map(todoList.entries());
+
+        const self = newList.get(key);
+        let other = null;
+
+        switch (direction) {
+            case 'up':
+                // search for the item with the highest ordering that's less than 'self' ordering
+                for (const item of todoList.values()) {
+                    // only consider items with the same status
+                    if (item.status === self.status && item.order < self.order) {
+                        if (!other || item.order > other.order) {
+                            other = item;
+                        }
+                    }
+                }
+                break;
+            case 'down':
+                // search for the item with the lowest ordering that's greater than 'self' ordering
+                for (const item of todoList.values()) {
+                    if (item.status === self.status && item.order > self.order) {
+                        if (!other || item.order < other.order) {
+                            other = item;
+                        }
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+
+        // swap if possible
+        if (other) {
+            newList.set(self.key, { ...self, order: other.order });
+            newList.set(other.key, { ...other, order: self.order });
+        }
+
+        setTodoList(newList);
+    }
+
     return (
         <div className="flex justify-center w-full h-screen bg-stone-50">
             <div className="flex-none place-self-center w-96 h-3/4 space-y-4">
@@ -392,6 +454,7 @@ function App() {
                         const newList = new Map(todoList.entries());
                         newList.set(nextKey, {
                             key: nextKey,
+                            order: todoList.size,
                             description: description,
                             labels: labels,
                             status: false,
@@ -412,6 +475,7 @@ function App() {
                             setTodoLabels(key, [...labels, label]);
                         }
                     }}
+                    setTodoOrdering={setTodoOrdering}
                 />
             </div>
         </div>
