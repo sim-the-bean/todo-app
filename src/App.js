@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef } from 'react';
 import Cookies from 'js-cookie';
 import "./index.css";
 import { PlusCircleIcon, MenuIcon, PencilIcon, TrashIcon, ArrowNarrowDownIcon, ArrowNarrowUpIcon, TagIcon as TagIconOutline, XIcon } from '@heroicons/react/outline'
-import { TagIcon as TagIconSolid } from '@heroicons/react/solid'
+import { TagIcon as TagIconSolid, ExternalLinkIcon } from '@heroicons/react/solid'
 
 /** @typedef {'red'|'green'|'blue'|'yellow'} Label */
 /** @typedef {{key: number, order: number, description: string, status: bool, labels: Label[]}} Item */
@@ -146,7 +146,7 @@ function ReorderButton(props) {
  * @param {{onClick: () => void}} props */
 function CookieNotice(props) {
     return (
-        <div className="block absolute z-40 bottom-8 w-1/3 p-4 space-y-4 bg-zinc-100 rounded-3xl outline outline-2 outline-zinc-200 hover:outline-slate-300 outline-offset-0">
+        <div className="block absolute z-40 place-self-center bottom-8 w-1/3 p-4 space-y-4 bg-zinc-100 rounded-3xl outline outline-2 outline-zinc-200 hover:outline-slate-300 outline-offset-0">
             <h1 className="block font-mono font-semibold text-3xl text-zinc-800">Cookie Notice</h1>
             <p className="block text-justify text-lg">
                 We use cookies necessary for proper function of this website. They don't contain
@@ -353,7 +353,7 @@ function TodoItem(props) {
                 checked={item.status}
                 onChange={(event) => props.setItemStatus(item.key, event.target.checked)}
             />
-            <span className="flex-1">{item.description}</span>
+            <span className="flex-1 text-zinc-700 font-medium">{item.description}</span>
             {
                 item.labels.map((color, index) => {
                     return (
@@ -541,8 +541,8 @@ function App() {
     }
 
     return (
-        <div className="flex justify-center w-full h-screen bg-stone-50">
-            <div className="flex-none place-self-center w-96 mt-48 min-h-[75%] space-y-4">
+        <div className="grid grid-cols-1 justify-center columns-1 w-full min-h-screen bg-stone-50">
+            <div className="flex-1 justify-self-center w-96 m-4 mt-16 mb-0 py-4 space-y-4">
                 <Title />
                 <SearchBar
                     onSearch={(text) => setFilterWords(text.toLowerCase().split(/\s+/))}
@@ -579,6 +579,15 @@ function App() {
                     }}
                     setTodoOrdering={setTodoOrdering}
                 />
+            </div>
+            <div className="flex-1 place-self-center mt-2 p-4">
+                <p className="flex-1 place-self-center text-justify text-md text-zinc-700 font-medium">
+                    Copyright &copy; Simone Walter<br />
+                    <a className="text-indigo-900 hover:text-indigo-600" href="https://github.com/soycan-sim/todo-app">
+                        <ExternalLinkIcon className="inline h-4" />
+                        soycan-sim/todo-app
+                    </a>
+                </p>
             </div>
             {!cookiesAccepted && <CookieNotice onClick={() => setCookiesAccepted(true)} />}
         </div>
