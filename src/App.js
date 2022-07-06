@@ -97,13 +97,13 @@ function SearchBar(props) {
     return (
         <div className="flex items-center w-full space-x-1">
             <input
-                className="flex-1 h-8 p-2 hover:drop-shadow-md rounded-lg outline outline-2 outline-zinc-200 hover:outline-slate-300 outline-offset-0"
+                className="flex-1 h-8 p-2 hover:drop-shadow-sm rounded-lg outline outline-2 outline-zinc-200 hover:outline-slate-300 outline-offset-0"
                 type={props.type || "text"}
                 placeholder="Search..."
                 onChange={(event) => props.onSearch(event.target.value)}
             />
             <select
-                className="flex-none h-9 w-12 hover:drop-shadow-md rounded-lg bg-zinc-200 hover:bg-gray-300"
+                className="flex-none h-9 w-12 hover:drop-shadow-sm rounded-lg bg-zinc-200 hover:bg-gray-300"
                 name="tags"
                 id="tags"
                 onChange={(event) => props.onFilter(event.target.value === 'none' ? null : event.target.value)}
