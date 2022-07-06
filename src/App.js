@@ -10,7 +10,8 @@ import { TagIcon as TagIconSolid, ExternalLinkIcon } from '@heroicons/react/soli
 /** 
  * A mapping from label colour to the unicode character that represents that label.
  * @type {{Label: {style: string, faded: string}}}
- * @readonly */
+ * @readonly 
+ */
 const TAG_STYLES = {
     red: {
         style: "flex-none h-5 text-red-600",
@@ -33,7 +34,8 @@ const TAG_STYLES = {
 /**
  * List of labels that are presented to the user.
  * @type {Label[]}
- * @readonly */
+ * @readonly 
+ */
 const LABELS = ['red', 'green', 'blue', 'yellow'];
 
 /** @readonly */
@@ -56,7 +58,8 @@ function HorizontalDivider(props) {
 
 /** 
  * A component that adds a new item to the list when clicked.
- * @param {{onClick: () => void, className: ?string}} props */
+ * @param {{onClick: () => void, className: ?string}} props 
+ */
 function AddItemButton(props) {
     return <button onClick={props.onClick}>
         <PlusCircleIcon className={`flex-none h-5 text-slate-400 hover:text-slate-900 ${props.className || ''}`} />
@@ -65,7 +68,8 @@ function AddItemButton(props) {
 
 /** 
  * A component that deletes the selected item when clicked.
- * @param {{onClick: () => void, className: ?string}} props */
+ * @param {{onClick: () => void, className: ?string}} props 
+ */
 function DeleteButton(props) {
     return <button onClick={props.onClick}>
         <TrashIcon className={`flex-none h-5 text-red-800 hover:text-red-500 ${props.className || ''}`} />
@@ -74,7 +78,8 @@ function DeleteButton(props) {
 
 /** 
  * A generic component to represent cancel.
- * @param {{onClick: () => void, className: ?string}} props */
+ * @param {{onClick: () => void, className: ?string}} props 
+ */
 function CancelButton(props) {
     return <button onClick={props.onClick}>
         <XIcon className={`flex-none h-5 text-red-800 hover:text-red-500 ${props.className || ''}`} />
@@ -83,7 +88,8 @@ function CancelButton(props) {
 
 /** 
  * A component that edits the selected item when clicked. Unused.
- * @param {{onClick: () => void, className: ?string}} props */
+ * @param {{onClick: () => void, className: ?string}} props 
+ */
 function EditButton(props) {
     return <button onClick={props.onClick}>
         <PencilIcon className={`flex-none h-5 text-blue-300 hover:text-sky-700 ${props.className || ''}`} />
@@ -92,7 +98,8 @@ function EditButton(props) {
 
 /** 
  * A component that toggles a label on the selected item when clicked.
- * @param {{faded: bool, color: Label, onClick: (color: Label) => void}} props */
+ * @param {{faded: bool, color: Label, onClick: (color: Label) => void}} props 
+ */
 function LabelButton(props) {
     let className;
 
@@ -109,7 +116,8 @@ function LabelButton(props) {
 
 /** 
  * A component that opens or closes the side menu on each item.
- * @param {{sideMenu: bool, onClick: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>, value: bool) => void, className: ?string}} props */
+ * @param {{sideMenu: bool, onClick: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>, value: bool) => void, className: ?string}} props 
+ */
 function MenuButton(props) {
     return <button className={`${props.sideMenu ? 'mr-2' : ''} ${props.className || ''}`} onClick={(event) => props.onClick(event, !props.sideMenu)}>
         <MenuIcon className="flex-none h-5 text-slate-400 hover:text-slate-900" />
@@ -118,7 +126,8 @@ function MenuButton(props) {
 
 /** 
  * A component that opens or closes the tag filter menu.
- * @param {{sideMenu: bool, onClick: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>, value: bool) => void, className: ?string}} props */
+ * @param {{sideMenu: bool, onClick: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>, value: bool) => void, className: ?string}} props 
+ */
 function FilterButton(props) {
     return <button className={`${props.sideMenu ? 'mr-2' : ''} ${props.className || ''}`} onClick={(event) => props.onClick(event, !props.sideMenu)}>
         <TagIconOutline className="flex-none h-5 text-slate-400 hover:text-slate-900" />
@@ -127,7 +136,8 @@ function FilterButton(props) {
 
 /**
  * A component that reorders list items visually.
- * @param {{onClick: (direction: 'up'|'down') => void}} props */
+ * @param {{onClick: (direction: 'up'|'down') => void}} props 
+ */
 function ReorderButton(props) {
     return (
         <div className="flex">
@@ -143,7 +153,8 @@ function ReorderButton(props) {
 
 /**
  * Displays a floating cookie notice.
- * @param {{onClick: () => void}} props */
+ * @param {{onClick: () => void}} props 
+ */
 function CookieNotice(props) {
     return (
         <div className="block absolute z-40 place-self-center bottom-8 w-1/3 p-4 space-y-4 bg-zinc-100 rounded-3xl outline outline-2 outline-zinc-200 hover:outline-slate-300 outline-offset-0">
@@ -169,7 +180,8 @@ function CookieNotice(props) {
 
 /** 
  * A component that allows the user to search for a phrase or filter by label.
- * @param {{onSearch: (text: string) => void, filter: ?Label, onFilter: (label: ?Label) => void}} props */
+ * @param {{onSearch: (text: string) => void, filter: ?Label, onFilter: (label: ?Label) => void}} props 
+ */
 function SearchBar(props) {
     const [showMenu, setShowMenu] = useState(false);
     const timeout = useRef(null);
@@ -216,7 +228,8 @@ function SearchBar(props) {
 
 /**
  * A component that represents the set of actions that can be performed to edit an existing item or an item being created.
- * @param {{selected: ?Label, selectLabel: (label: Label) => void, showTagMenu: (value: bool) => void}} props */
+ * @param {{selected: ?Label, selectLabel: (label: Label) => void, showTagMenu: (value: bool) => void}} props 
+ */
 function TagMenu(props) {
     return <div className="absolute z-10 flex items-center h-8 p-2 pt-3 ml-2 space-x-1 bg-zinc-200 hover:drop-shadow-lg rounded-lg outline outline-2 outline-zinc-300">
         <FilterButton sideMenu onClick={props.showTagMenu} />
@@ -227,7 +240,8 @@ function TagMenu(props) {
 
 /**
  * A component that represents the set of actions that can be performed to edit an existing item or an item being created.
- * @param {{labels: Label[], editItem: () => void, deleteItem: () => void, toggleLabel: (label: Label) => void, showSideMenu: () => void}} props */
+ * @param {{labels: Label[], editItem: () => void, deleteItem: () => void, toggleLabel: (label: Label) => void, showSideMenu: () => void}} props 
+ */
 function SideMenu(props) {
     return <div className="absolute z-10 flex items-center h-9 p-2 -ml-2 -mt-2 space-x-1 bg-zinc-200 hover:drop-shadow-lg rounded-lg outline outline-2 outline-zinc-300">
         <MenuButton sideMenu onClick={props.showSideMenu} />
@@ -239,7 +253,8 @@ function SideMenu(props) {
 
 /** 
  * A wrapper component that represents an existing item on the todo list or a new item.
- * @param {{showMenu: bool, showSideMenu: () => void, labels: Label[], editItem: ?() => void, deleteItem: ?() => void, toggleLabel: (label: Label) => void, setTodoOrdering: ?(direction: 'up'|'down') => void, className: ?string}} props */
+ * @param {{showMenu: bool, showSideMenu: () => void, labels: Label[], editItem: ?() => void, deleteItem: ?() => void, toggleLabel: (label: Label) => void, setTodoOrdering: ?(direction: 'up'|'down') => void, className: ?string}} props 
+ */
 function TodoBox(props) {
     const [showMenu1, setShowMenu1] = useState(false);
     const timeout = useRef(null);
@@ -287,7 +302,8 @@ function TodoBox(props) {
 
 /** 
  * A component that represents an existing item on the todo list.
- * @param {{addNewItem: (description: string, labels: Label[]) => void}} props */
+ * @param {{addNewItem: (description: string, labels: Label[]) => void}} props 
+ */
 function TodoNew(props) {
     const [description, setDescription] = useState('');
     const [labels, setLabels] = useState([]);
@@ -336,7 +352,8 @@ function TodoNew(props) {
 
 /** 
  * A component that represents a new item to be added to the list.
- * @param {{item: Item, deleteItem: () => void, toggleLabel: (key: number, label: Label) => void, setItemStatus: (key: number, status: bool) => void, setTodoOrdering: (key: number, direction: 'up'|'down') => void}} props */
+ * @param {{item: Item, deleteItem: () => void, toggleLabel: (key: number, label: Label) => void, setItemStatus: (key: number, status: bool) => void, setTodoOrdering: (key: number, direction: 'up'|'down') => void}} props 
+ */
 function TodoItem(props) {
     const item = props.item;
 
@@ -369,7 +386,8 @@ function TodoItem(props) {
 
 /** 
  * A component that represents all items on the list, sorts them by status, and filters and/or searches.
- * @param {{list: Map<number, Item>, filter: {words: string[], label: ?Label}, addNewItem: (description: string, labels: Label[]) => void, deleteItem: () => void, toggleLabel: (key: number, label: Label) => void, setItemStatus: (key: number, status: bool) => void, setTodoOrdering: (key: number, direction: 'up'|'down') => void}} props */
+ * @param {{list: Map<number, Item>, filter: {words: string[], label: ?Label}, addNewItem: (description: string, labels: Label[]) => void, deleteItem: () => void, toggleLabel: (key: number, label: Label) => void, setItemStatus: (key: number, status: bool) => void, setTodoOrdering: (key: number, direction: 'up'|'down') => void}} props 
+ */
 function TodoList(props) {
     const items = new Array(...props.list.values());
     const filtered = items
