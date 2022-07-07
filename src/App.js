@@ -1,7 +1,7 @@
-import React, { useState, useMemo, useRef, useEffect, useContext } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useLayoutEffect, useContext } from 'react';
 import Cookies from 'js-cookie';
 import "./index.css";
-import { PlusCircleIcon, MenuIcon, PencilIcon, TrashIcon, ArrowNarrowDownIcon, ArrowNarrowUpIcon, TagIcon as TagIconOutline, XIcon } from '@heroicons/react/outline'
+import { PlusCircleIcon, MenuIcon, PencilIcon, TrashIcon, SelectorIcon, TagIcon as TagIconOutline, XIcon } from '@heroicons/react/outline'
 import { TagIcon as TagIconSolid, ExternalLinkIcon } from '@heroicons/react/solid'
 
 /** @typedef {'red'|'green'|'blue'|'yellow'} Label */
@@ -40,6 +40,9 @@ const LABELS = ['red', 'green', 'blue', 'yellow'];
 
 /** @readonly */
 const TODO_COOKIE = 'todoList';
+
+/** @readonly */
+const ORDER_COOKIE = 'todoOrder';
 
 /** @readonly */
 const CONSENT_COOKIE = 'essentialCookiesConsent';
@@ -163,16 +166,13 @@ function FilterButton(props) {
 
 /**
  * A component that reorders list items visually.
- * @param {{onClick: (direction: 'up'|'down') => void}} props 
+ * @param {{onMouseDown: () => void}} props 
  */
 function ReorderButton(props) {
     return (
-        <div className="flex">
-            <button className="accent-transparent" onClick={() => props.onClick('up')}>
-                <ArrowNarrowUpIcon className="flex-none h-5 -ml-1 -mt-1 text-slate-400 hover:text-slate-900" />
-            </button>
-            <button className="accent-transparent" onClick={() => props.onClick('down')}>
-                <ArrowNarrowDownIcon className="flex-none h-5 -ml-1 -mb-1 text-slate-400 hover:text-slate-900" />
+        <div className={`flex ${props.className}`}>
+            <button className="accent-transparent" onMouseDown={props.onMouseDown}>
+                <SelectorIcon className="flex-none h-5 text-slate-400 hover:text-slate-900" />
             </button>
         </div>
     );
@@ -280,7 +280,7 @@ function SideMenu(props) {
 
 /** 
  * A wrapper component that represents an existing item on the todo list or a new item.
- * @param {{showMenu: bool, showSideMenu: () => void, labels: Label[], editItem: ?() => void, deleteItem: ?() => void, toggleLabel: (label: Label) => void, setTodoOrdering: ?(direction: 'up'|'down') => void, className: ?string}} props 
+ * @param {{showMenu: bool, showSideMenu: () => void, labels: Label[], editItem: ?() => void, deleteItem: ?() => void, toggleLabel: (label: Label) => void, onDragDown: ?() => void, className: ?string}} props 
  */
 function TodoBox(props) {
     const [showMenu1, setShowMenu1] = useState(false);
@@ -317,7 +317,7 @@ function TodoBox(props) {
 
     return (
         <div className={className} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
-            {props.setTodoOrdering && <ReorderButton onClick={props.setTodoOrdering} />}
+            {props.onDragDown && <ReorderButton onMouseDown={props.onDragDown} />}
             {props.children}
             <div className="flex static">
                 <MenuButton onClick={showSideMenu} />
@@ -379,7 +379,7 @@ function TodoNew(props) {
 
 /** 
  * A component that represents a new item to be added to the list.
- * @param {{item: Item, deleteItem: () => void, toggleLabel: (key: number, label: Label) => void, setItemStatus: (key: number, status: bool) => void, setTodoOrdering: (key: number, direction: 'up'|'down') => void}} props 
+ * @param {{item: Item, deleteItem: () => void, toggleLabel: (key: number, label: Label) => void, setItemStatus: (key: number, status: bool) => void, onDragDown: () => void}} props 
  */
 function TodoItem(props) {
     const item = props.item;
@@ -389,7 +389,7 @@ function TodoItem(props) {
             deleteItem={() => props.deleteItem(item.key)}
             labels={item.labels}
             toggleLabel={(label) => props.toggleLabel(item.key, label)}
-            setTodoOrdering={(direction) => props.setTodoOrdering(item.key, direction)}
+            onDragDown={props.onDragDown}
         >
             <input
                 className="flex-none w-5 mx-4 rounded-md"
@@ -411,6 +411,136 @@ function TodoItem(props) {
     );
 }
 
+/**
+ * A wrapper component to represent a list of re-orderable buttons.
+ * @param {{list: Item[], name: string}} props
+ */
+function TodoSection(props) {
+    const cookies = useContext(CookieContext);
+    const order_cookie = useMemo(() => `${ORDER_COOKIE}-${props.name}`, [props.name]);
+
+    const [ordering, setOrdering] = useState(() => {
+        const ordering = cookies?.get(order_cookie);
+        if (ordering) {
+            return ordering.map((key) => ({ key, draggable: false }));
+        } else {
+            return props.list.map((item) => ({ key: item.key, draggable: false }));
+        }
+    });
+    const [dragging, setDragging] = useState(null);
+
+    useEffect(
+        () => cookies?.set(order_cookie, ordering.map(({ key }) => key)),
+        [ordering, cookies, order_cookie],
+    );
+
+    useLayoutEffect(
+        () => {
+            setOrdering((ordering) => {
+                return ordering
+                    .filter((ord) => props.list.some((item) => item.key === ord.key))
+                    .concat(props.list
+                        .filter((item) => ordering.every((ord) => item.key !== ord.key))
+                        .map((item) => ({ key: item.key, draggable: false })));
+            });
+        },
+        [props.list],
+    );
+
+    /** 
+     * @param {string} field
+     * @return {(key: number, value: any) => void}
+     */
+    const setOrderableField = (field) => (key, value) => {
+        const index = ordering.findIndex((ord) => ord.key === key);
+        const newOrdering = ordering.slice();
+        newOrdering[index] = { ...ordering[index], [field]: value };
+        setOrdering(newOrdering);
+    }
+
+    const setDraggable = setOrderableField('draggable');
+
+    /** 
+     * @param {number} key
+     * @return {number}
+     */
+    const getOrder = (key) => ordering.findIndex((ord) => ord.key === key);
+    /** 
+     * @param {number} key
+     * @param {number} newIndex
+     */
+    const setOrder = (key, newIndex) => {
+        const oldIndex = ordering.findIndex((ord) => ord.key === key);
+
+        if (newIndex < oldIndex) {
+            setOrdering([
+                ...ordering.slice(0, newIndex),
+                ordering[oldIndex],
+                ...ordering.slice(newIndex, oldIndex),
+                ...ordering.slice(oldIndex + 1),
+            ]);
+        } else if (newIndex > oldIndex) {
+            setOrdering([
+                ...ordering.slice(0, oldIndex),
+                ...ordering.slice(oldIndex + 1, newIndex + 1),
+                ordering[oldIndex],
+                ...ordering.slice(newIndex + 1),
+            ]);
+        }
+    };
+
+    const list = useMemo(
+        () => ordering
+            .map((order) => [props.list.find((item) => item.key === order.key), order])
+            .filter(([item]) => item),
+        [ordering, props.list],
+    );
+
+    return (
+        <div
+            className="grid grid-cols-1 gap-2 w-full justify-center my-2"
+            onDragOver={(event) => {
+                if (dragging) {
+                    event.preventDefault();
+                }
+            }}
+        >
+            {
+                list.map(([item, order]) => {
+                    return (
+                        <div
+                            key={item.key}
+                            className={order.draggable ? "opacity-40" : undefined}
+                            draggable={order.draggable}
+                            onDragStart={() => setDragging(item.key)}
+                            onDragEnd={() => {
+                                setDragging(null);
+                                setDraggable(item.key, false);
+                            }}
+                            onDragOver={(event) => {
+                                if (dragging) {
+                                    const newIndex = getOrder(item.key);
+                                    setOrder(dragging, newIndex);
+                                    event.preventDefault();
+                                }
+                            }}
+                        >
+                            <TodoItem
+                                key={item.key}
+                                item={item}
+                                setItemStatus={props.setItemStatus}
+                                deleteItem={props.deleteItem}
+                                toggleLabel={props.toggleLabel}
+                                onDragDown={() => setDraggable(item.key, true)}
+                            />
+                        </div>
+                    );
+                })
+            }
+        </div>
+    )
+}
+
 /** 
  * A component that represents all items on the list, sorts them by status, and filters and/or searches.
  * @param {{list: Map<number, Item>, filter: {words: string[], label: ?Label}, addNewItem: (description: string, labels: Label[]) => void, deleteItem: () => void, toggleLabel: (key: number, label: Label) => void, setItemStatus: (key: number, status: bool) => void, setTodoOrdering: (key: number, direction: 'up'|'down') => void}} props 
@@ -426,24 +556,10 @@ function TodoList(props) {
         .filter((item) => {
             const desc = item.description.toLowerCase();
             return props.filter.words.every((word) => desc.includes(word));
-        })
-        .sort((a, b) => a.order - b.order)
-        .map((item) => {
-            return [
-                item,
-                <TodoItem
-                    key={item.key}
-                    item={item}
-                    setItemStatus={props.setItemStatus}
-                    deleteItem={props.deleteItem}
-                    toggleLabel={props.toggleLabel}
-                    setTodoOrdering={props.setTodoOrdering}
-                />
-            ];
         });
 
     // checks if all items have the same 'status' flag
-    const [allStatus] = filtered.reduce(([all, prev], [item]) => {
+    const [allStatus] = filtered.reduce(([all, prev], item) => {
         if (!all) {
             return [false, null];
         } else if (prev === null) {
@@ -454,21 +570,23 @@ function TodoList(props) {
     }, [true, null]);
 
     return (
-        <div className="grid grid-cols-1 gap-2 w-full justify-center">
+        <div className="grid grid-cols-1 gap-1 w-full justify-center">
             <TodoNew addNewItem={props.addNewItem} />
-            {
-                // items in progress
-                filtered
-                    .filter(([item, _]) => !item.status)
-                    .map(([_, element]) => element)
-            }
-            {!allStatus && <HorizontalDivider className="my-4" />}
-            {
-                // completed items
-                filtered
-                    .filter(([item, _]) => item.status)
-                    .map(([_, element]) => element)
-            }
+            <TodoSection
+                name="in-progress"
+                list={filtered.filter((item) => !item.status)}
+                setItemStatus={props.setItemStatus}
+                deleteItem={props.deleteItem}
+                toggleLabel={props.toggleLabel}
+            />
+            {!allStatus && <HorizontalDivider className="my-2" />}
+            <TodoSection
+                name="completed"
+                list={filtered.filter((item) => item.status)}
+                setItemStatus={props.setItemStatus}
+                deleteItem={props.deleteItem}
+                toggleLabel={props.toggleLabel}
+            />
         </div>
     );
 }
