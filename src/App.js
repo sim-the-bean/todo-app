@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useContext } from 'react';
 import Cookies from 'js-cookie';
 import "./index.css";
 import { PlusCircleIcon, MenuIcon, PencilIcon, TrashIcon, ArrowNarrowDownIcon, ArrowNarrowUpIcon, TagIcon as TagIconOutline, XIcon } from '@heroicons/react/outline'
@@ -43,6 +43,33 @@ const TODO_COOKIE = 'todoList';
 
 /** @readonly */
 const CONSENT_COOKIE = 'essentialCookiesConsent';
+
+const _cookies = {
+    /**
+     * @private
+     */
+    ctx: Cookies.withAttributes({ expires: 365, path: '', sameSite: 'Lax' }),
+    /**
+     * @param {string} name 
+     * @return {?any}
+     */
+    get: function (name) {
+        const value = this.ctx.get(name);
+        if (!value) {
+            return null;
+        }
+        return JSON.parse(value);
+    },
+    /**
+     * @param {string} name 
+     * @param {any} value
+     */
+    set: function (name, value) { this.ctx.set(name, JSON.stringify(value)) },
+};
+/**
+ * @type {React.Context<?{get: (name: string) => ?any, set: (name: string, value: any) => void}>}
+ */
+const CookieContext = React.createContext(null);
 
 /**
  * @param {{label: Label, faded: bool}} props
@@ -157,7 +184,7 @@ function ReorderButton(props) {
  */
 function CookieNotice(props) {
     return (
-        <div className="block absolute z-40 place-self-center bottom-8 w-1/3 p-4 space-y-4 bg-zinc-100 rounded-3xl outline outline-2 outline-zinc-200 hover:outline-slate-300 outline-offset-0">
+        <div className="block absolute z-40 place-self-center left-16 bottom-16 w-1/3 p-4 space-y-4 bg-zinc-100 rounded-3xl outline outline-2 outline-zinc-200 hover:outline-slate-300 outline-offset-0">
             <h1 className="block font-mono font-semibold text-3xl text-zinc-800">Cookie Notice</h1>
             <p className="block text-justify text-lg">
                 We use cookies necessary for proper function of this website. They don't contain
@@ -463,13 +490,13 @@ function Title() {
     </h1>;
 }
 
-function App() {
-    const [cookiesAccepted, setCookiesAccepted1] = useState(() => Cookies.get(CONSENT_COOKIE) === '1');
+function TodoApp() {
+    const cookies = useContext(CookieContext);
 
-    const [todoList, setTodoList1] = useState(() => {
-        const todoList = Cookies.get(TODO_COOKIE);
+    const [todoList, setTodoList] = useState(() => {
+        const todoList = cookies?.get(TODO_COOKIE);
         if (todoList) {
-            return new Map(JSON.parse(todoList));
+            return new Map(todoList);
         } else {
             return new Map();
         }
@@ -487,21 +514,10 @@ function App() {
         return max + 1;
     }, [todoList]);
 
-    /** @param {Map<number, Item>} list */
-    const setTodoList = (list) => {
-        setTodoList1(list);
-        if (cookiesAccepted) {
-            Cookies.set(TODO_COOKIE, JSON.stringify(new Array(...list.entries())), { expires: 365, path: '', sameSite: 'Lax' });
-        }
-    };
-
-    /** @param {bool} value */
-    const setCookiesAccepted = (value) => {
-        setCookiesAccepted1(value);
-        if (value) {
-            Cookies.set(CONSENT_COOKIE, '1', { expires: 365, path: '', sameSite: 'Lax' });
-        }
-    };
+    useEffect(
+        () => cookies?.set(TODO_COOKIE, new Array(...todoList.entries())),
+        [todoList, cookies]
+    );
 
     /** 
      * @param {string} field
@@ -607,8 +623,27 @@ function App() {
                     </a>
                 </p>
             </div>
-            {!cookiesAccepted && <CookieNotice onClick={() => setCookiesAccepted(true)} />}
         </div>
+    );
+}
+
+function App() {
+    const [cookiesAccepted, setCookiesAccepted] = useState(() => _cookies.get(CONSENT_COOKIE) === true);
+
+    useEffect(
+        () => {
+            if (cookiesAccepted) {
+                _cookies.set(CONSENT_COOKIE, true);
+            }
+        },
+        [cookiesAccepted],
+    );
+
+    return (
+        <CookieContext.Provider value={cookiesAccepted ? _cookies : null}>
+            <TodoApp />
+            {!cookiesAccepted && <CookieNotice onClick={() => setCookiesAccepted(true)} />}
+        </CookieContext.Provider>
     );
 }
 
