@@ -5,6 +5,7 @@ import CookieNotice from './CookieNotice';
 import SearchBar from './todo/SearchBar';
 import TodoList from './todo/TodoList';
 import { CookieContext, _cookies, TODO_COOKIE, CONSENT_COOKIE } from './misc/cookies';
+import { useVersion, VERSION } from './version'
 
 /** @typedef {'red'|'green'|'blue'|'yellow'} Label */
 /** @typedef {{key: number, order: number, description: string, status: bool, labels: Label[]}} Item */
@@ -92,7 +93,7 @@ function TodoApp() {
             </div>
             <div className="flex-1 place-self-center mt-2 p-4">
                 <p className="flex-1 place-self-center text-justify text-md text-zinc-700 font-medium">
-                    Copyright &copy; Simone Walter<br />
+                    Todo&#8230; v{VERSION} &mdash; Copyright 2022 &copy; Simone Walter<br />
                     <UI.Link href="https://github.com/soycan-sim/todo-app">
                         soycan-sim/todo-app
                     </UI.Link>
@@ -103,6 +104,8 @@ function TodoApp() {
 }
 
 function App() {
+    useVersion();
+
     const [cookiesAccepted, setCookiesAccepted] = useState(() => _cookies.get(CONSENT_COOKIE) === true);
 
     useEffect(

@@ -28,6 +28,21 @@ export const _cookies = {
         return JSON.parse(value);
     },
     /**
+     * @return {{[key: string]: any}}
+     */
+    getAll: function () {
+        const all = {};
+        const cookies = this.ctx.get();
+        for (const [key, value] of Object.entries(cookies)) {
+            try {
+                all[key] = JSON.parse(value);
+            } catch (_) {
+                // ignore invalid cookies
+            }
+        }
+        return all;
+    },
+    /**
      * @param {string} name 
      * @param {any} value
      */
