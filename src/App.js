@@ -543,11 +543,10 @@ function TodoSection(props) {
 
 /** 
  * A component that represents all items on the list, sorts them by status, and filters and/or searches.
- * @param {{list: Map<number, Item>, filter: {words: string[], label: ?Label}, addNewItem: (description: string, labels: Label[]) => void, deleteItem: () => void, toggleLabel: (key: number, label: Label) => void, setItemStatus: (key: number, status: bool) => void, setTodoOrdering: (key: number, direction: 'up'|'down') => void}} props 
+ * @param {{list: Item[], filter: {words: string[], label: ?Label}, addNewItem: (description: string, labels: Label[]) => void, deleteItem: () => void, toggleLabel: (key: number, label: Label) => void, setItemStatus: (key: number, status: bool) => void}} props 
  */
 function TodoList(props) {
-    const items = new Array(...props.list.values());
-    const filtered = items
+    const filtered = props.list
         // filter by label
         .filter((item) => {
             return !props.filter.label || item.labels.includes(props.filter.label);
@@ -611,29 +610,14 @@ function Title() {
 function TodoApp() {
     const cookies = useContext(CookieContext);
 
-    const [todoList, setTodoList] = useState(() => {
-        const todoList = cookies?.get(TODO_COOKIE);
-        if (todoList) {
-            return new Map(todoList);
-        } else {
-            return new Map();
-        }
-    });
+    const [todoList, setTodoList] = useState(() => cookies?.get(TODO_COOKIE) ?? []);
     const [filterWords, setFilterWords] = useState([]);
     const [filterLabel, setFilterLabel] = useState(null);
 
-    const nextKey = useMemo(() => {
-        let max = 0;
-        for (const key of todoList.keys()) {
-            if (key > max) {
-                max = key;
-            }
-        }
-        return max + 1;
-    }, [todoList]);
+    const nextKey = useMemo(() => todoList.length === 0 ? 1 : todoList[todoList.length - 1].key + 1, [todoList]);
 
     useEffect(
-        () => cookies?.set(TODO_COOKIE, new Array(...todoList.entries())),
+        () => cookies?.set(TODO_COOKIE, todoList),
         [todoList, cookies]
     );
 
@@ -641,56 +625,13 @@ function TodoApp() {
      * @param {string} field
      * @return {(key: number, value: any) => void} */
     const setTodoField = (field) => (key, value) => {
-        const newList = new Map(todoList.entries());
-        newList.set(key, { ...newList.get(key), [field]: value });
+        const index = todoList.findIndex((item) => item.key === key);
+        const newList = todoList.slice();
+        newList[index] = { ...todoList[index], [field]: value };
         setTodoList(newList);
     }
 
     const setTodoLabels = setTodoField('labels');
-
-    /** 
-     * @param {number} key
-     * @param {'up'|'down'} direction */
-    const setTodoOrdering = (key, direction) => {
-        const newList = new Map(todoList.entries());
-
-        const self = newList.get(key);
-        let other = null;
-
-        switch (direction) {
-            case 'up':
-                // search for the item with the highest ordering that's less than 'self' ordering
-                for (const item of todoList.values()) {
-                    // only consider items with the same status
-                    if (item.status === self.status && item.order < self.order) {
-                        if (!other || item.order > other.order) {
-                            other = item;
-                        }
-                    }
-                }
-                break;
-            case 'down':
-                // search for the item with the lowest ordering that's greater than 'self' ordering
-                for (const item of todoList.values()) {
-                    if (item.status === self.status && item.order > self.order) {
-                        if (!other || item.order < other.order) {
-                            other = item;
-                        }
-                    }
-                }
-                break;
-            default:
-                break;
-        }
-
-        // swap if possible
-        if (other) {
-            newList.set(self.key, { ...self, order: other.order });
-            newList.set(other.key, { ...other, order: self.order });
-        }
-
-        setTodoList(newList);
-    }
 
     return (
         <div className="grid grid-cols-1 justify-center columns-1 w-full min-h-screen bg-stone-50">
@@ -705,10 +646,9 @@ function TodoApp() {
                     list={todoList}
                     filter={{ words: filterWords, label: filterLabel }}
                     addNewItem={(description, labels) => {
-                        const newList = new Map(todoList.entries());
-                        newList.set(nextKey, {
+                        const newList = todoList.slice();
+                        newList.push({
                             key: nextKey,
-                            order: todoList.size,
                             description: description,
                             labels: labels,
                             status: false,
@@ -716,20 +656,19 @@ function TodoApp() {
                         setTodoList(newList);
                     }}
                     deleteItem={(key) => {
-                        const newList = new Map(todoList.entries());
-                        newList.delete(key);
-                        setTodoList(newList);
+                        const index = todoList.findIndex((item) => item.key === key);
+                        setTodoList([...todoList.slice(0, index), ...todoList.slice(index + 1)]);
                     }}
                     setItemStatus={setTodoField('status')}
                     toggleLabel={(key, label) => {
-                        const labels = todoList.get(key).labels;
+                        const index = todoList.findIndex((item) => item.key === key);
+                        const labels = todoList[index].labels;
                         if (labels.includes(label)) {
                             setTodoLabels(key, labels.filter((l) => l !== label));
                         } else {
                             setTodoLabels(key, [...labels, label]);
                         }
                     }}
-                    setTodoOrdering={setTodoOrdering}
                 />
             </div>
             <div className="flex-1 place-self-center mt-2 p-4">
