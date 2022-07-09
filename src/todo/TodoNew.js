@@ -12,7 +12,7 @@ const TodoNew = UI.withPopupMenu(
             aria-haspopup={props['aria-haspopup']}
             aria-expanded={props['aria-expanded']}
             aria-checked={props['aria-checked']}
-            className={`${props.className ?? ''} ${props.popup ? "mr-2" : ""}`}
+            className={`my-1 ${props.className ?? ''} ${props.popup ? "mr-2" : ""}`}
             popup={props.popup}
             onClick={props.onClick} />
     ),
@@ -32,12 +32,12 @@ const TodoNew = UI.withPopupMenu(
         };
 
         return (
-            <popup.Parent className="relative h-9 p-2 my-2 bg-zinc-50 hover:drop-shadow-sm rounded-lg outline outline-2 outline-zinc-200 hover:outline-slate-300">
-                <UI.AddItemButton className="mr-4" onClick={addNew} />
+            <popup.Parent className="relative h-12 p-2 mt-4 mb-3 bg-zinc-50 hover:drop-shadow-sm rounded-lg outline outline-2 outline-zinc-200 hover:outline-slate-300">
+                <UI.AddItemButton className="mr-4 ml-1 my-1" onClick={addNew} />
                 <input
                     tabindex="0"
                     aria-label="New item description"
-                    className="flex-1 h-7 p-2 rounded-md outline outline-2 outline-transparent hover:outline-zinc-200 outline-offset-0"
+                    className="flex-1 py-1 px-3 text-lg rounded-lg outline outline-2 outline-transparent hover:outline-zinc-200 outline-offset-0"
                     type="text"
                     value={description}
                     onChange={(event) => setDescription(event.target.value)}
@@ -48,10 +48,10 @@ const TodoNew = UI.withPopupMenu(
                     }}
                 />
                 <popup.Wrapper>
-                    <popup.PopupButton />
+                    <popup.PopupButton className="ml-2" />
                     {
-                        popup.showPopup && <popup.PopupMenu className="h-9 p-2 -ml-2 -mt-2">
-                            <popup.PopupButton popup />
+                        popup.showPopup && <popup.PopupMenu className="h-12 p-2 -ml-1 -mt-2">
+                            <popup.PopupButton className="ml-1" popup />
                             {
                                 LABELS.map((color) => {
                                     const checked = labels.includes(color);

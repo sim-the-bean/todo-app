@@ -12,7 +12,7 @@ const SearchBar = UI.withPopupMenu(
             aria-haspopup={props['aria-haspopup']}
             aria-expanded={props['aria-expanded']}
             aria-checked={props['aria-checked']}
-            className={`${props.className ?? ''} ${!props.popup ? "flex-none h-8 w-9 ml-2 p-2 hover:drop-shadow-sm rounded-lg outline outline-2 outline-zinc-200 hover:outline-slate-300" : "mr-2"}`}
+            className={`${props.className ?? ''} ${!props.popup ? "flex-none h-full w-12 ml-2 p-2 pl-3 hover:drop-shadow-sm rounded-lg outline outline-2 outline-zinc-200 hover:outline-slate-300" : "mr-2 ml-1 mb-1"}`}
             popup={props.popup}
             onClick={props.onClick}
         />
@@ -20,19 +20,19 @@ const SearchBar = UI.withPopupMenu(
     (props) => {
         const popup = props.popup;
         return (
-            <popup.Parent>
+            <popup.Parent className="h-10">
                 <input
                     tabindex="0"
                     aria-label="Search list"
-                    className="flex-1 h-8 p-2 hover:drop-shadow-sm rounded-lg outline outline-2 outline-zinc-200 hover:outline-slate-300 outline-offset-0"
+                    className="flex-1 h-full p-2 px-3 text-lg hover:drop-shadow-sm rounded-lg outline outline-2 outline-zinc-200 hover:outline-slate-300 outline-offset-0"
                     type="search"
                     placeholder="Search..."
                     onChange={(event) => props.onSearch(event.target.value)}
                 />
-                <popup.Wrapper>
+                <popup.Wrapper className="h-full">
                     <popup.PopupButton aria-label="Toggle filter menu" />
                     {
-                        popup.showPopup && <popup.PopupMenu className="h-8 p-2 pt-3 ml-2">
+                        popup.showPopup && <popup.PopupMenu className="h-10 p-2 pt-3 ml-2">
                             <popup.PopupButton aria-label="Toggle filter menu" popup />
                             {
                                 LABELS.map((color) => {
@@ -50,7 +50,7 @@ const SearchBar = UI.withPopupMenu(
                             }
                             <UI.CancelButton
                                 role="menuitem"
-                                className="ml-2"
+                                className="ml-2 mr-2 my-1"
                                 onClick={() => props.onFilter(null)}
                             />
                         </popup.PopupMenu>

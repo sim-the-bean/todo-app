@@ -102,7 +102,7 @@ export function TodoSection(props) {
     return (
         <div
             role="list"
-            className="grid grid-cols-1 gap-2 w-full justify-center my-2"
+            className="grid grid-cols-1 gap-3 w-full justify-center my-2"
             onDragOver={(event) => {
                 if (dragging) {
                     event.preventDefault();
