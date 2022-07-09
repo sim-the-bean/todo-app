@@ -10,11 +10,22 @@ import LABELS from '../misc/labels';
  * A wrapper component that represents an existing item on the todo list or a new item.
  */
 export const TodoBox = UI.withPopupMenu(
-    (props) => <UI.MenuButton className={`${props.className ?? ''} ${props.popup ? "mr-2" : ""}`} popup={props.popup} onClick={props.onClick} />,
+    (props) => (
+        <UI.MenuButton
+            aria-haspopup={props['aria-haspopup']}
+            aria-expanded={props['aria-expanded']}
+            aria-checked={props['aria-checked']}
+            className={`${props.className ?? ''} ${props.popup ? "mr-2" : ""}`}
+            popup={props.popup}
+            onClick={props.onClick} />
+    ),
     (props) => {
         const popup = props.popup;
         return (
-            <popup.Parent className="relative h-9 p-2 bg-zinc-50 hover:drop-shadow-sm rounded-lg outline outline-2 outline-zinc-200 hover:outline-slate-300">
+            <popup.Parent
+                role={props.role}
+                className="relative h-9 p-2 bg-zinc-50 hover:drop-shadow-sm rounded-lg outline outline-2 outline-zinc-200 hover:outline-slate-300"
+            >
                 <UI.ReorderButton onMouseDown={props.onDragDown} onMouseUp={props.onDragUp} />
                 {props.children}
                 <popup.Wrapper>
@@ -23,16 +34,24 @@ export const TodoBox = UI.withPopupMenu(
                         popup.showPopup && <popup.PopupMenu className="h-9 p-2 -ml-2 -mt-2">
                             <popup.PopupButton popup />
                             {
-                                LABELS.map((color) => (
-                                    <UI.LabelButton
+                                LABELS.map((color) => {
+                                    const checked = props.labels.includes(color);
+                                    return <UI.LabelButton
                                         key={color}
+                                        role="menuitemcheckbox"
+                                        aria-label={`Toggle ${color} label`}
+                                        aria-checked={checked}
                                         color={color}
-                                        faded={!props.labels.includes(color)}
+                                        faded={!checked}
                                         onClick={() => props.toggleLabel(color)}
-                                    />
-                                ))
+                                    />;
+                                })
                             }
-                            {props.deleteItem && <UI.DeleteButton className="ml-2" onClick={props.deleteItem} />}
+                            <UI.DeleteButton
+                                role="menuitem"
+                                className="ml-2"
+                                onClick={props.deleteItem}
+                            />
                         </popup.PopupMenu>
                     }
                 </popup.Wrapper>
@@ -50,6 +69,8 @@ export function TodoItem(props) {
 
     return (
         <TodoBox
+            id={`todoItem${props.item.key}`}
+            role="listitem"
             deleteItem={() => props.deleteItem(item.key)}
             labels={item.labels}
             toggleLabel={(label) => props.toggleLabel(item.key, label)}
@@ -57,6 +78,7 @@ export function TodoItem(props) {
             onDragUp={props.onDragUp}
         >
             <input
+                aria-label={item.status ? "Mark as in-progress" : "Mark as finished"}
                 className="flex-none w-5 mx-4 rounded-md"
                 type="checkbox"
                 checked={item.status}

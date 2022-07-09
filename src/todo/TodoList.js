@@ -101,6 +101,7 @@ export function TodoSection(props) {
 
     return (
         <div
+            role="list"
             className="grid grid-cols-1 gap-2 w-full justify-center my-2"
             onDragOver={(event) => {
                 if (dragging) {
@@ -187,7 +188,10 @@ export function TodoList(props) {
 
     return (
         <div className="grid grid-cols-1 gap-1 w-full justify-center">
-            <TodoNew addNewItem={props.addNewItem} />
+            <TodoNew
+                id="todoNew"
+                addNewItem={props.addNewItem}
+            />
             <TodoSection
                 name="in-progress"
                 list={filtered.filter((item) => !item.status)}

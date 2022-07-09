@@ -37,7 +37,7 @@ export function Tag(props) {
 
 /** @param {{color: ?string, className: ?string}} props */
 export function HorizontalDivider(props) {
-    return <div className={`w-3/5 place-self-center outline outline-1 outline-${props.color || 'zinc-200'} ${props.className ?? ''}`}></div>;
+    return <div role="separator" className={`w-3/5 place-self-center outline outline-1 outline-${props.color || 'zinc-200'} ${props.className ?? ''}`}></div>;
 }
 
 export function Link(props) {

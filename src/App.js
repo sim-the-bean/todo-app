@@ -58,6 +58,7 @@ function TodoApp() {
             <div className="flex-1 justify-self-center w-96 m-4 mt-16 mb-0 py-4 space-y-4">
                 <Title />
                 <SearchBar
+                    id="searchBar"
                     onSearch={(text) => setFilterWords(text.toLowerCase().split(/\s+/))}
                     filter={filterLabel}
                     onFilter={setFilterLabel}
