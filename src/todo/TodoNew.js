@@ -32,12 +32,12 @@ const TodoNew = UI.withPopupMenu(
         };
 
         return (
-            <popup.Parent className="relative h-12 p-2 mt-4 mb-3 bg-zinc-50 hover:drop-shadow-sm rounded-lg outline outline-2 outline-zinc-200 hover:outline-slate-300">
+            <popup.Parent className="relative h-12 p-2 mt-4 mb-3 bg-zinc-50 hover:drop-shadow-sm rounded-lg outline outline-2 outline-zinc-200 hover:outline-slate-400">
                 <UI.AddItemButton className="mr-4 ml-1 my-1" onClick={addNew} />
                 <input
-                    tabindex="0"
+                    tabIndex="0"
                     aria-label="New item description"
-                    className="flex-1 py-1 px-3 text-lg rounded-lg outline outline-2 outline-transparent hover:outline-zinc-200 outline-offset-0"
+                    className="flex-1 py-1 px-3 text-lg rounded-lg outline outline-2 outline-transparent hover:outline-zinc-200 focus:outline-blue-500"
                     type="text"
                     value={description}
                     onChange={(event) => setDescription(event.target.value)}

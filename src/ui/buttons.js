@@ -26,7 +26,7 @@ export function button(Icon, options) {
             className={props.className}
             onClick={onClick ?? props.onClick}
         >
-            <Icon className={`flex-none h-6 ${additionalClass}`} />
+            <Icon className={`flex-none h-6 outline outline-2 outline-transparent focus:outline-blue-500 ${additionalClass}`} />
         </button>
     );
 }
@@ -66,9 +66,10 @@ export const FilterButton = button(TagIcon, { ariaLabel: "Toggle filter menu" })
  * @param {{faded: bool, color: Label, onClick: (event: React.MouseEvent) => void, ariaLabel: string}} props 
  */
 export function LabelButton(props) {
+    const baseClassName = "h-6 mx-1 outline outline-2 outline-transparent focus:outline-blue-500";
     const className = props.faded ?
-        "h-6 mx-1 scale-75 translate-y-1 transition ease-in-out delay-150 hover:scale-125 hover:translate-y-0 hover:animate-pulse" :
-        "h-6 mx-1 transition ease-in-out delay-50 hover:scale-110 hover:animate-pulse";
+        `${baseClassName} scale-75 translate-y-1 transition ease-in-out delay-150 hover:scale-125 hover:translate-y-0 hover:animate-pulse` :
+        `${baseClassName} transition ease-in-out delay-50 hover:scale-110 hover:animate-pulse`;
 
     return <button role={props.role} aria-label={props['aria-label']} className={className} onClick={props.onClick}>
         <Tag faded={props.faded} color={props.color} />
@@ -82,7 +83,7 @@ export function LabelButton(props) {
 export function ReorderButton(props) {
     return (
         <div className={`flex ${props.className ?? ''}`}>
-            <button aria-label="Drag to reorder" className="accent-transparent" onMouseDown={props.onMouseDown} onMouseUp={props.onMouseUp}>
+            <button aria-label="Drag to reorder" className="outline outline-2 outline-transparent focus:outline-blue-500" onMouseDown={props.onMouseDown} onMouseUp={props.onMouseUp}>
                 <SelectorIcon className="flex-none h-6 text-slate-400 hover:text-slate-900" />
             </button>
         </div>

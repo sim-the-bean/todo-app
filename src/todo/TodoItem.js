@@ -24,7 +24,7 @@ export const TodoBox = UI.withPopupMenu(
         return (
             <popup.Parent
                 role={props.role}
-                className="relative h-12 p-2 bg-zinc-50 hover:drop-shadow-sm rounded-xl outline outline-2 outline-zinc-200 hover:outline-slate-300"
+                className="relative h-12 p-2 bg-zinc-50 hover:drop-shadow-sm rounded-xl outline outline-2 outline-zinc-200 hover:outline-slate-400"
             >
                 <UI.ReorderButton className="ml-1 my-1" onMouseDown={props.onDragDown} onMouseUp={props.onDragUp} />
                 {props.children}
@@ -79,7 +79,7 @@ export function TodoItem(props) {
         >
             <input
                 aria-label={item.status ? "Mark as in-progress" : "Mark as finished"}
-                className="flex-none h-4 w-5 mx-4"
+                className="flex-none h-4 w-5 mx-4 outline outline-2 outline-transparent focus:outline-blue-500"
                 type="checkbox"
                 checked={item.status}
                 onChange={(event) => props.setItemStatus(item.key, event.target.checked)}
