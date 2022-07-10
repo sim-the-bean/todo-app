@@ -1,7 +1,7 @@
-import React, { useState, useMemo, useEffect, useLayoutEffect, useContext } from 'react';
+import React, { useState, useMemo, useEffect, useLayoutEffect } from 'react';
 import '../index.css';
 import * as UI from '../ui/ui';
-import { CookieContext, ORDER_COOKIE } from '../misc/cookies';
+import JsonStorage, { ORDER_KEY } from '../misc/json-storage';
 import TodoItem from './TodoItem';
 import TodoNew from './TodoNew';
 
@@ -14,11 +14,10 @@ import TodoNew from './TodoNew';
  * @param {{list: Item[], name: string}} props
  */
 export function TodoSection(props) {
-    const cookies = useContext(CookieContext);
-    const order_cookie = useMemo(() => `${ORDER_COOKIE}-${props.name}`, [props.name]);
+    const order_key = useMemo(() => `${ORDER_KEY}-${props.name}`, [props.name]);
 
     const [ordering, setOrdering] = useState(() => {
-        const ordering = cookies?.get(order_cookie);
+        const ordering = JsonStorage.get(order_key);
         if (ordering) {
             return ordering.map((key) => ({ key, draggable: false }));
         } else {
@@ -28,8 +27,8 @@ export function TodoSection(props) {
     const [dragging, setDragging] = useState(null);
 
     useEffect(
-        () => cookies?.set(order_cookie, ordering.map(({ key }) => key)),
-        [ordering, cookies, order_cookie],
+        () => JsonStorage.set(order_key, ordering.map(({ key }) => key)),
+        [ordering, order_key],
     );
 
     useLayoutEffect(

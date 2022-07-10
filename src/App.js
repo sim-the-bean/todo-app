@@ -1,14 +1,10 @@
-import React, { useState, useMemo, useEffect, useContext } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import './index.css';
 import * as UI from './ui/ui';
-import CookieNotice from './CookieNotice';
 import SearchBar from './todo/SearchBar';
 import TodoList from './todo/TodoList';
-import { CookieContext, _cookies, TODO_COOKIE, CONSENT_COOKIE } from './misc/cookies';
+import JsonStorage, { TODO_KEY } from './misc/json-storage';
 import { useVersion, VERSION } from './version'
-
-/** @typedef {'red'|'green'|'blue'|'yellow'} Label */
-/** @typedef {{key: number, order: number, description: string, status: bool, labels: Label[]}} Item */
 
 function Title() {
     return <h1 className="p-4 font-mono font-semibold text-4xl text-zinc-800">
@@ -28,17 +24,15 @@ function Title() {
 }
 
 function TodoApp() {
-    const cookies = useContext(CookieContext);
-
-    const [todoList, setTodoList] = useState(() => cookies?.get(TODO_COOKIE) ?? []);
+    const [todoList, setTodoList] = useState(() => JsonStorage.get(TODO_KEY) ?? []);
     const [filterWords, setFilterWords] = useState([]);
     const [filterLabel, setFilterLabel] = useState(null);
 
     const nextKey = useMemo(() => todoList.length === 0 ? 1 : todoList[todoList.length - 1].key + 1, [todoList]);
 
     useEffect(
-        () => cookies?.set(TODO_COOKIE, todoList),
-        [todoList, cookies]
+        () => JsonStorage.set(TODO_KEY, todoList),
+        [todoList]
     );
 
     /** 
@@ -107,23 +101,7 @@ function TodoApp() {
 function App() {
     useVersion();
 
-    const [cookiesAccepted, setCookiesAccepted] = useState(() => _cookies.get(CONSENT_COOKIE) === true);
-
-    useEffect(
-        () => {
-            if (cookiesAccepted) {
-                _cookies.set(CONSENT_COOKIE, true);
-            }
-        },
-        [cookiesAccepted],
-    );
-
-    return (
-        <CookieContext.Provider value={cookiesAccepted ? _cookies : null}>
-            <TodoApp />
-            {!cookiesAccepted && <CookieNotice onClick={() => setCookiesAccepted(true)} />}
-        </CookieContext.Provider>
-    );
+    return <TodoApp />;
 }
 
 export default App;
