@@ -84,7 +84,7 @@ export function TodoItem(props) {
                 checked={item.status}
                 onChange={(event) => props.setItemStatus(item.key, event.target.checked)}
             />
-            <span className="flex-1 text-zinc-700 font-medium text-lg">{item.description}</span>
+            <span className="flex-1 text-zinc-700 font-medium text-base tablet:text-lg truncate">{item.description}</span>
             {
                 item.labels.map((color, index) => {
                     return (

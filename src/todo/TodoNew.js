@@ -37,7 +37,7 @@ const TodoNew = UI.withPopupMenu(
                 <input
                     tabIndex="0"
                     aria-label="New item description"
-                    className="flex-1 py-1 px-3 text-lg rounded-lg outline outline-2 outline-transparent hover:outline-zinc-200 focus:outline-blue-500"
+                    className="flex-1 w-full py-1 px-3 text-lg rounded-lg outline outline-2 outline-transparent hover:outline-zinc-200 focus:outline-blue-500"
                     type="text"
                     value={description}
                     onChange={(event) => setDescription(event.target.value)}

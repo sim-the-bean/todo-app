@@ -49,7 +49,7 @@ function TodoApp() {
 
     return (
         <div className="grid grid-cols-1 justify-center columns-1 w-full min-h-screen bg-stone-50">
-            <main className="flex-1 justify-self-center w-96 m-4 mt-12 mb-0 py-4 space-y-4">
+            <main className="flex-1 justify-self-center w-5/6 tablet:w-1/2 desktop:w-128 m-4 mt-12 mb-0 py-4 space-y-4">
                 <Title />
                 <SearchBar
                     id="searchBar"
@@ -86,9 +86,12 @@ function TodoApp() {
                     }}
                 />
             </main>
-            <footer className="flex-1 place-self-center mt-2 p-4">
-                <p className="flex-1 place-self-center text-justify text-lg text-zinc-700 font-medium">
-                    Todo&#8230; v{VERSION} &mdash; Copyright 2022 &copy; Simone Walter<br />
+            <footer className="flex-1 place-self-center mt-2 p-4 text-justify text-base tablet:text-lg text-zinc-700 font-medium">
+                <p className="flex-1 place-self-center">
+                    Todo&#8230; v{VERSION}
+                </p>
+                <p className="flex-1 place-self-center">
+                    Copyright 2022 &copy; Simone Walter<br />
                     <UI.Link href="https://github.com/soycan-sim/todo-app">
                         soycan-sim/todo-app
                     </UI.Link>
