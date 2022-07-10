@@ -11,7 +11,7 @@ import { useVersion, VERSION } from './version'
 /** @typedef {{key: number, order: number, description: string, status: bool, labels: Label[]}} Item */
 
 function Title() {
-    return <h1 className="font-mono font-semibold text-3xl text-zinc-800">
+    return <h1 className="p-4 font-mono font-semibold text-4xl text-zinc-800">
         Todo
         <span className="animate-pulse">
             <span className="text-zinc-600">
@@ -55,9 +55,10 @@ function TodoApp() {
 
     return (
         <div className="grid grid-cols-1 justify-center columns-1 w-full min-h-screen bg-stone-50">
-            <div className="flex-1 justify-self-center w-96 m-4 mt-16 mb-0 py-4 space-y-4">
+            <main className="flex-1 justify-self-center w-96 m-4 mt-12 mb-0 py-4 space-y-4">
                 <Title />
                 <SearchBar
+                    id="searchBar"
                     onSearch={(text) => setFilterWords(text.toLowerCase().split(/\s+/))}
                     filter={filterLabel}
                     onFilter={setFilterLabel}
@@ -90,15 +91,15 @@ function TodoApp() {
                         }
                     }}
                 />
-            </div>
-            <div className="flex-1 place-self-center mt-2 p-4">
-                <p className="flex-1 place-self-center text-justify text-md text-zinc-700 font-medium">
+            </main>
+            <footer className="flex-1 place-self-center mt-2 p-4">
+                <p className="flex-1 place-self-center text-justify text-lg text-zinc-700 font-medium">
                     Todo&#8230; v{VERSION} &mdash; Copyright 2022 &copy; Simone Walter<br />
                     <UI.Link href="https://github.com/soycan-sim/todo-app">
                         soycan-sim/todo-app
                     </UI.Link>
                 </p>
-            </div>
+            </footer>
         </div>
     );
 }

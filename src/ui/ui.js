@@ -11,20 +11,20 @@ import '../index.css';
  */
 const TAG_STYLES = {
     red: {
-        style: "flex-none h-5 text-red-600",
-        faded: "flex-none h-5 text-red-400 hover:text-red-600",
+        style: "flex-none h-6 text-red-600",
+        faded: "flex-none h-6 text-red-400 hover:text-red-600",
     },
     green: {
-        style: "flex-none h-5 text-green-600",
-        faded: "flex-none h-5 text-lime-200 hover:text-green-600",
+        style: "flex-none h-6 text-green-600",
+        faded: "flex-none h-6 text-lime-200 hover:text-green-600",
     },
     blue: {
-        style: "flex-none h-5 text-sky-600",
-        faded: "flex-none h-5 text-blue-300 hover:text-sky-600",
+        style: "flex-none h-6 text-sky-600",
+        faded: "flex-none h-6 text-blue-300 hover:text-sky-600",
     },
     yellow: {
-        style: "flex-none h-5 text-amber-400",
-        faded: "flex-none h-5 text-orange-200 hover:text-amber-400",
+        style: "flex-none h-6 text-amber-400",
+        faded: "flex-none h-6 text-orange-200 hover:text-amber-400",
     },
 };
 
@@ -37,7 +37,7 @@ export function Tag(props) {
 
 /** @param {{color: ?string, className: ?string}} props */
 export function HorizontalDivider(props) {
-    return <div className={`w-3/5 place-self-center outline outline-1 outline-${props.color || 'zinc-200'} ${props.className ?? ''}`}></div>;
+    return <div role="separator" className={`w-3/5 place-self-center outline outline-1 outline-${props.color || 'zinc-200'} ${props.className ?? ''}`}></div>;
 }
 
 export function Link(props) {

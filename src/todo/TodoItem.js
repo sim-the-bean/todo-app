@@ -10,29 +10,48 @@ import LABELS from '../misc/labels';
  * A wrapper component that represents an existing item on the todo list or a new item.
  */
 export const TodoBox = UI.withPopupMenu(
-    (props) => <UI.MenuButton className={`${props.className ?? ''} ${props.popup ? "mr-2" : ""}`} popup={props.popup} onClick={props.onClick} />,
+    (props) => (
+        <UI.MenuButton
+            aria-haspopup={props['aria-haspopup']}
+            aria-expanded={props['aria-expanded']}
+            aria-checked={props['aria-checked']}
+            className={`my-1 ${props.className ?? ''} ${props.popup ? "mr-2" : ""}`}
+            popup={props.popup}
+            onClick={props.onClick} />
+    ),
     (props) => {
         const popup = props.popup;
         return (
-            <popup.Parent className="relative h-9 p-2 bg-zinc-50 hover:drop-shadow-sm rounded-lg outline outline-2 outline-zinc-200 hover:outline-slate-300">
-                <UI.ReorderButton onMouseDown={props.onDragDown} onMouseUp={props.onDragUp} />
+            <popup.Parent
+                role={props.role}
+                className="relative h-12 p-2 bg-zinc-50 hover:drop-shadow-sm rounded-xl outline outline-2 outline-zinc-200 hover:outline-slate-400"
+            >
+                <UI.ReorderButton className="ml-1 my-1" onMouseDown={props.onDragDown} onMouseUp={props.onDragUp} />
                 {props.children}
                 <popup.Wrapper>
-                    <popup.PopupButton />
+                    <popup.PopupButton className="ml-2" />
                     {
-                        popup.showPopup && <popup.PopupMenu className="h-9 p-2 -ml-2 -mt-2">
-                            <popup.PopupButton popup />
+                        popup.showPopup && <popup.PopupMenu className="h-12 p-2 -ml-1 -mt-2">
+                            <popup.PopupButton className="ml-1" popup />
                             {
-                                LABELS.map((color) => (
-                                    <UI.LabelButton
+                                LABELS.map((color) => {
+                                    const checked = props.labels.includes(color);
+                                    return <UI.LabelButton
                                         key={color}
+                                        role="menuitemcheckbox"
+                                        aria-label={`Toggle ${color} label`}
+                                        aria-checked={checked}
                                         color={color}
-                                        faded={!props.labels.includes(color)}
+                                        faded={!checked}
                                         onClick={() => props.toggleLabel(color)}
-                                    />
-                                ))
+                                    />;
+                                })
                             }
-                            {props.deleteItem && <UI.DeleteButton className="ml-2" onClick={props.deleteItem} />}
+                            <UI.DeleteButton
+                                role="menuitem"
+                                className="ml-2 mr-2 my-1"
+                                onClick={props.deleteItem}
+                            />
                         </popup.PopupMenu>
                     }
                 </popup.Wrapper>
@@ -50,6 +69,8 @@ export function TodoItem(props) {
 
     return (
         <TodoBox
+            id={`todoItem${props.item.key}`}
+            role="listitem"
             deleteItem={() => props.deleteItem(item.key)}
             labels={item.labels}
             toggleLabel={(label) => props.toggleLabel(item.key, label)}
@@ -57,12 +78,13 @@ export function TodoItem(props) {
             onDragUp={props.onDragUp}
         >
             <input
-                className="flex-none w-5 mx-4 rounded-md"
+                aria-label={item.status ? "Mark as in-progress" : "Mark as finished"}
+                className="flex-none h-4 w-5 mx-4 outline outline-2 outline-transparent focus:outline-blue-500"
                 type="checkbox"
                 checked={item.status}
                 onChange={(event) => props.setItemStatus(item.key, event.target.checked)}
             />
-            <span className="flex-1 text-zinc-700 font-medium">{item.description}</span>
+            <span className="flex-1 text-zinc-700 font-medium text-lg">{item.description}</span>
             {
                 item.labels.map((color, index) => {
                     return (

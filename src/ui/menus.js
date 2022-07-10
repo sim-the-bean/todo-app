@@ -20,6 +20,7 @@ export function withPopupMenu(Button, Render, options) {
     return (props) => {
         const [showPopup, setShowPopup] = useState(false);
         const timeout = useRef(null);
+        const popupId = useMemo(() => `${props.id}-popup`, [props.id]);
 
         const Parent = useCallback((props) => {
             // If the mouse leaves the box (not the side menu), we disappear the box after 1 second.
@@ -37,9 +38,16 @@ export function withPopupMenu(Button, Render, options) {
                 }
             };
 
-            return <div className={`flex items-center w-full space-x-1 ${props.className ?? ''}`} onMouseEnter={hideTimeout !== null && onMouseEnter} onMouseLeave={hideTimeout !== null && onMouseLeave}>
-                {props.children}
-            </div>
+            return (
+                <div
+                    role={props.role}
+                    className={`flex items-center w-full space-x-1 ${props.className ?? ''}`}
+                    onMouseEnter={hideTimeout !== 0 && onMouseEnter}
+                    onMouseLeave={hideTimeout !== 0 && onMouseLeave}
+                >
+                    {props.children}
+                </div>
+            );
         }, []);
 
         const Wrapper = useCallback((props) => (
@@ -49,14 +57,27 @@ export function withPopupMenu(Button, Render, options) {
         ), []);
 
         const PopupButton = useCallback((props) => (
-            <Button className={props.className} popup={props.popup} onClick={() => setShowPopup(!props.popup)} />
-        ), []);
+            <Button
+                aria-label={props['aria-label'] ?? "Toggle popup menu"}
+                aria-haspopup="menu"
+                aria-expanded={props.popup}
+                aria-checked={props['aria-checked']}
+                aria-controls={popupId}
+                className={props.className}
+                popup={props.popup}
+                onClick={() => setShowPopup(!props.popup)}
+            />
+        ), [popupId]);
 
         const PopupMenu = useCallback((props) => (
-            <div className={`absolute z-10 flex items-center space-x-1 bg-zinc-200 hover:drop-shadow-lg rounded-lg outline outline-2 outline-zinc-300 ${props.className ?? ''}`}>
+            <div
+                id={popupId}
+                role="menu"
+                aria-orientation="horizontal"
+                className={`absolute z-10 flex items-center space-x-1 bg-zinc-200 hover:drop-shadow-lg rounded-lg outline outline-2 outline-zinc-300 ${props.className ?? ''}`}>
                 {props.children}
             </div>
-        ), []);
+        ), [popupId]);
 
         const popup = useMemo(
             () => ({ showPopup, setShowPopup, Parent, Wrapper, PopupButton, PopupMenu }),
