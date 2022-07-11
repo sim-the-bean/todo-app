@@ -19,13 +19,19 @@ function getCookie(name) {
         return null;
     }
 
-    const value = document.cookie
+    const pair = document.cookie
         .split('; ')
         .map((cookie) => {
             const parts = cookie.split('=');
             return [parts[0], parts.slice(1).join('=')];
         })
-        .find(([key]) => name === decodeURIComponent(key))[1];
+        .find(([key]) => name === decodeURIComponent(key));
+
+    if (!pair) {
+        return null;
+    }
+
+    const value = pair[1];
 
     return JSON.parse(decodeURIComponent(value));
 }
@@ -76,6 +82,7 @@ function migrateLocalData(version) {
             // no data change, only migration to local storage
             data = getAllCookies();
             delete data[consent_key];
+            delete data[VERSION_KEY];
 
             deleteAllCookies();
             break;
@@ -98,6 +105,9 @@ function migrateLocalData(version) {
                             status: object.status ?? false,
                         }));
                 }
+            } else if (typeof list[0] === 'object') {
+                // version 0.1.0 mistakenly didn't save the version cookie
+                return migrateLocalData('0.1.0');
             }
 
             deleteAllCookies();
@@ -114,7 +124,6 @@ export function useVersion() {
 
     if (currentVersion !== VERSION) {
         const newData = migrateLocalData(currentVersion);
-        console.log(newData);
         if (newData) {
             Object.entries(newData).forEach(([key, value]) => {
                 JsonStorage.set(key, value);
