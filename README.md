@@ -9,11 +9,21 @@ A simple web-based todo tracker.
 - [x] Marking items as done
 - [x] Text search and label filter
 - [x] Reordering of items
-- [x] Local storage (cookies)
+- [x] Local storage
 - [x] GDPR compliance
-- [ ] Dark mode
-- [ ] Accessibility
-- [ ] Support for mobile devices
+- [x] Dark mode
+- [x] Accessibility (hopefully)
+- [x] Support for mobile devices
+
+# Changelog
+
+See [CHANGELOG.md](./CHANGELOG.md) for full version history.
+
+## 0.2.0
+
+- Switched to using local storage
+- Added support for mobile devices
+- Added dark mode
 
 # License
 
