@@ -11,16 +11,16 @@ import '../index.css';
  */
 const TAG_STYLES = {
     red: {
-        style: "flex-none h-6 text-red-600",
-        faded: "flex-none h-6 text-red-400 hover:text-red-600",
+        style: "flex-none h-6 text-red-600 dark:text-red-500",
+        faded: "flex-none h-6 text-red-400 hover:text-red-600 dark:hover:text-red-500",
     },
     green: {
-        style: "flex-none h-6 text-green-600",
-        faded: "flex-none h-6 text-lime-200 hover:text-green-600",
+        style: "flex-none h-6 text-green-600 dark:text-green-500",
+        faded: "flex-none h-6 text-lime-200 hover:text-green-600 dark:hover:text-green-500",
     },
     blue: {
-        style: "flex-none h-6 text-sky-600",
-        faded: "flex-none h-6 text-blue-300 hover:text-sky-600",
+        style: "flex-none h-6 text-sky-600 dark:text-sky-500",
+        faded: "flex-none h-6 text-blue-300 hover:text-sky-600 dark:hover:text-sky-500",
     },
     yellow: {
         style: "flex-none h-6 text-amber-400",
@@ -35,14 +35,14 @@ export function Tag(props) {
     return <TagIcon className={props.faded ? TAG_STYLES[props.color].faded : TAG_STYLES[props.color].style} />;
 }
 
-/** @param {{color: ?string, className: ?string}} props */
+/** @param {{className: ?string}} props */
 export function HorizontalDivider(props) {
-    return <div role="separator" className={`w-3/5 place-self-center outline outline-1 outline-${props.color || 'zinc-200'} ${props.className ?? ''}`}></div>;
+    return <div role="separator" className={`w-3/5 place-self-center outline outline-1 outline-zinc-200 dark:outline-gray-600 ${props.className ?? ''}`}></div>;
 }
 
 export function Link(props) {
     return (
-        <a className={`text-indigo-900 hover:text-indigo-600 ${props.className ?? ''}`} href={props.href}>
+        <a className={`text-indigo-900 hover:text-indigo-600 dark:text-indigo-500 dark:hover:text-indigo-800 ${props.className ?? ''}`} href={props.href}>
             <ExternalLinkIcon className="inline h-4" />
             {props.children}
         </a>

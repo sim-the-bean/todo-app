@@ -79,9 +79,9 @@ export function withPopupMenu(Button, Render, options) {
             const ariaOrientation = props.vertical ? "vertical" : "horizontal";
             let className;
             if (props.vertical) {
-                className = "absolute z-10 grid grid-cols-1 gap-1 justify-center bg-zinc-200 hover:drop-shadow-lg rounded-lg outline outline-2 outline-zinc-300";
+                className = "absolute z-10 grid grid-cols-1 gap-1 justify-center bg-zinc-200 dark:bg-slate-800 hover:drop-shadow-lg rounded-lg outline outline-2 outline-zinc-300 dark:outline-gray-700 dark:hover:outline-slate-600";
             } else {
-                className = "absolute z-10 flex items-center space-x-1 bg-zinc-200 hover:drop-shadow-lg rounded-lg outline outline-2 outline-zinc-300";
+                className = "absolute z-10 flex items-center space-x-1 bg-zinc-200 dark:bg-slate-800 hover:drop-shadow-lg rounded-lg outline outline-2 outline-zinc-300 dark:outline-gray-700 dark:hover:outline-slate-600";
             }
             className = `${className} ${props.className ?? ''}`;
             return <div

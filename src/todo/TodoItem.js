@@ -25,7 +25,7 @@ export const TodoBox = UI.withPopupMenu(
         const device = useContext(DeviceContext);
 
         const popup = props.popup;
-        const baseClassName = "relative h-12 p-2 bg-zinc-50 hover:drop-shadow-sm rounded-xl outline outline-2 outline-zinc-200 hover:outline-slate-400";
+        const baseClassName = "relative h-12 p-2 bg-zinc-50 dark:bg-gray-800 hover:drop-shadow-sm rounded-xl outline outline-2 outline-zinc-200 hover:outline-slate-400 dark:outline-gray-700 dark:hover:outline-slate-600";
         let className = baseClassName;
         if (props.isDragging) {
             className = `${baseClassName} opacity-40`;
@@ -150,12 +150,12 @@ export function TodoItem(props) {
         >
             <input
                 aria-label={item.status ? "Mark as in-progress" : "Mark as finished"}
-                className="flex-none h-4 w-5 mx-4 outline outline-2 outline-transparent focus:outline-blue-500"
+                className="flex-none h-4 w-5 mx-4 outline outline-2 outline-transparent focus:outline-blue-500 dark:focus:outline-blue-400"
                 type="checkbox"
                 checked={item.status}
                 onChange={(event) => props.setItemStatus(item.key, event.target.checked)}
             />
-            <span className="flex-1 text-zinc-700 font-medium text-base tablet:text-lg truncate">{item.description}</span>
+            <span className="flex-1 text-zinc-700 dark:text-gray-400 font-medium text-base tablet:text-lg truncate">{item.description}</span>
             {
                 item.labels.map((color, index) => {
                     return (

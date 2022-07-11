@@ -9,8 +9,8 @@ import LABELS from '../misc/labels';
  */
 const SearchBar = UI.withPopupMenu(
     (props) => {
-        const classNameDefault = "flex-none h-full w-12 ml-2 p-2 pl-3 hover:drop-shadow-sm rounded-lg outline outline-2 outline-zinc-200 hover:outline-slate-400 focus:outline-blue-500";
-        const classNamePopup = "mr-2 ml-1 mb-1 outline outline-2 outline-transparent focus:outline-blue-500";
+        const classNameDefault = "flex-none h-full w-12 ml-2 p-2 pl-3 hover:drop-shadow-sm rounded-lg outline outline-2 outline-zinc-200 hover:outline-slate-400 focus:outline-blue-500 dark:outline-gray-700 dark:hover:outline-slate-500 dark:focus:outline-blue-400";
+        const classNamePopup = "mr-2 ml-1 mb-1 outline outline-2 outline-transparent focus:outline-blue-500 dark:focus:outline-blue-400";
         return <UI.FilterButton
             aria-haspopup={props['aria-haspopup']}
             aria-expanded={props['aria-expanded']}
@@ -29,7 +29,7 @@ const SearchBar = UI.withPopupMenu(
                 <input
                     tabIndex="0"
                     aria-label="Search list"
-                    className="flex-1 w-full h-full p-2 px-3 text-lg hover:drop-shadow-sm rounded-lg outline outline-2 outline-zinc-200 hover:outline-slate-400 focus:outline-blue-500"
+                    className="flex-1 w-full h-full p-2 px-3 text-lg hover:drop-shadow-sm dark:text-gray-400 dark:bg-slate-700 rounded-lg outline outline-2 outline-zinc-200 hover:outline-slate-400 focus:outline-blue-500 dark:outline-gray-600 dark:hover:outline-slate-400 dark:focus:outline-blue-400"
                     type="search"
                     placeholder="Search..."
                     onChange={(event) => props.onSearch(event.target.value)}
