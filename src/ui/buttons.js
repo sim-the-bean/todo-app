@@ -69,7 +69,7 @@ export const FilterButton = button(TagIcon, { ariaLabel: "Toggle filter menu" })
  * @param {{faded: bool, color: Label, onClick: (event: React.MouseEvent) => void, ariaLabel: string}} props 
  */
 export function LabelButton(props) {
-    const baseClassName = "h-6 mx-1 outline outline-2 outline-transparent focus:outline-blue-500";
+    const baseClassName = "h-6 mx-1 my-1 outline outline-2 outline-transparent focus:outline-blue-500";
     const className = props.faded ?
         `${baseClassName} scale-75 translate-y-1 transition ease-in-out delay-150 hover:scale-125 hover:translate-y-0 hover:animate-pulse` :
         `${baseClassName} transition ease-in-out delay-50 hover:scale-110 hover:animate-pulse`;

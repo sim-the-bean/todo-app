@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import '../index.css';
+import { DeviceContext } from '../App';
 import * as UI from '../ui/ui';
 import LABELS from '../misc/labels';
 
@@ -17,6 +18,8 @@ const TodoNew = UI.withPopupMenu(
             onClick={props.onClick} />
     ),
     (props) => {
+        const device = useContext(DeviceContext);
+
         const popup = props.popup;
 
         const [description, setDescription] = useState('');
@@ -50,7 +53,7 @@ const TodoNew = UI.withPopupMenu(
                 <popup.Wrapper>
                     <popup.PopupButton className="ml-2" />
                     {
-                        popup.showPopup && <popup.PopupMenu className="h-12 p-2 -ml-1 -mt-2">
+                        popup.showPopup && <popup.PopupMenu vertical={device.mobile} className={device.mobile ? "w-12 p-2 -ml-1 -mt-2" : "h-12 p-2 -ml-1 -mt-2"}>
                             <popup.PopupButton className="ml-1" popup />
                             {
                                 LABELS.map((color) => {
@@ -68,6 +71,9 @@ const TodoNew = UI.withPopupMenu(
                                                 setLabels(labels.filter((l) => l !== color));
                                             } else {
                                                 setLabels([...labels, color]);
+                                            }
+                                            if (device.mobile) {
+                                                popup.setShowPopup(false);
                                             }
                                         }}
                                     />;

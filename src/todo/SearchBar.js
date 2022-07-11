@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import '../index.css';
+import { DeviceContext } from '../App';
 import * as UI from '../ui/ui';
 import LABELS from '../misc/labels';
 
@@ -20,6 +21,8 @@ const SearchBar = UI.withPopupMenu(
         />;
     },
     (props) => {
+        const device = useContext(DeviceContext);
+
         const popup = props.popup;
         return (
             <popup.Parent className="h-10">
@@ -34,7 +37,7 @@ const SearchBar = UI.withPopupMenu(
                 <popup.Wrapper className="h-full">
                     <popup.PopupButton aria-label="Toggle filter menu" />
                     {
-                        popup.showPopup && <popup.PopupMenu className="h-10 p-2 pt-3 ml-2">
+                        popup.showPopup && <popup.PopupMenu vertical={device.mobile} className={device.mobile ? "w-12 p-2 pt-2 ml-2" : "h-10 p-2 pt-3 ml-2"}>
                             <popup.PopupButton aria-label="Toggle filter menu" popup />
                             {
                                 LABELS.map((color) => {
@@ -46,14 +49,24 @@ const SearchBar = UI.withPopupMenu(
                                         aria-checked={checked}
                                         color={color}
                                         faded={!checked}
-                                        onClick={() => props.onFilter(color !== props.filter ? color : null)}
+                                        onClick={() => {
+                                            props.onFilter(color !== props.filter ? color : null);
+                                            if (device.mobile) {
+                                                popup.setShowPopup(false);
+                                            }
+                                        }}
                                     />;
                                 })
                             }
                             <UI.CancelButton
                                 role="menuitem"
-                                className="ml-2 mr-2 my-1"
-                                onClick={() => props.onFilter(null)}
+                                className={device.mobile ? "ml-1 mt-1" : "ml-2 mr-2 my-1"}
+                                onClick={() => {
+                                    props.onFilter(null);
+                                    if (device.mobile) {
+                                        popup.setShowPopup(false);
+                                    }
+                                }}
                             />
                         </popup.PopupMenu>
                     }

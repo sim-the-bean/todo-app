@@ -1,6 +1,7 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useContext } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import '../index.css';
+import { DeviceContext } from '../App';
 import * as UI from '../ui/ui';
 import LABELS from '../misc/labels';
 
@@ -21,6 +22,8 @@ export const TodoBox = UI.withPopupMenu(
             onClick={props.onClick} />
     ),
     (props) => {
+        const device = useContext(DeviceContext);
+
         const popup = props.popup;
         const baseClassName = "relative h-12 p-2 bg-zinc-50 hover:drop-shadow-sm rounded-xl outline outline-2 outline-zinc-200 hover:outline-slate-400";
         let className = baseClassName;
@@ -38,7 +41,7 @@ export const TodoBox = UI.withPopupMenu(
                 <popup.Wrapper>
                     <popup.PopupButton className="ml-2" />
                     {
-                        popup.showPopup && <popup.PopupMenu className="h-12 p-2 -ml-1 -mt-2">
+                        popup.showPopup && <popup.PopupMenu vertical={device.mobile} className={device.mobile ? "w-12 p-2 -ml-1 -mt-2" : "h-12 p-2 -ml-1 -mt-2"}>
                             <popup.PopupButton className="ml-1" popup />
                             {
                                 LABELS.map((color) => {
@@ -50,14 +53,24 @@ export const TodoBox = UI.withPopupMenu(
                                         aria-checked={checked}
                                         color={color}
                                         faded={!checked}
-                                        onClick={() => props.toggleLabel(color)}
+                                        onClick={() => {
+                                            props.toggleLabel(color);
+                                            if (device.mobile) {
+                                                popup.setShowPopup(false);
+                                            }
+                                        }}
                                     />;
                                 })
                             }
                             <UI.DeleteButton
                                 role="menuitem"
-                                className="ml-2 mr-2 my-1"
-                                onClick={props.deleteItem}
+                                className={device.mobile ? "ml-1 mt-1" : "ml-2 mr-2 my-1"}
+                                onClick={() => {
+                                    props.deleteItem();
+                                    if (device.mobile) {
+                                        popup.setShowPopup(false);
+                                    }
+                                }}
                             />
                         </popup.PopupMenu>
                     }
