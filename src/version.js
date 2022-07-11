@@ -82,6 +82,10 @@ function migrateLocalData(version) {
         }
         default: {
             const list = getCookie(TODO_KEY);
+            if (!list) {
+                return;
+            }
+
             if (Array.isArray(list[0]) && list[0].length === 2) {
                 const [index, object] = list[0];
                 if (typeof index === 'number' && typeof object === 'object') {
