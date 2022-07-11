@@ -59,7 +59,7 @@ function TodoApp() {
 
     return (
         <div className="grid grid-cols-1 justify-center columns-1 w-full min-h-screen bg-stone-50 dark:bg-slate-900">
-            <main className="flex-1 justify-self-center w-5/6 tablet:w-1/2 desktop:w-128 m-4 mt-12 mb-0 py-4 space-y-4">
+            <main className="flex-1 justify-self-center w-5/6 tablet:w-2/3 desktop:w-128 m-4 mt-12 mb-0 py-4 space-y-4">
                 <div className="flex justify-end items-baseline">
                     <Title />
                     <div className="flex items-center">
