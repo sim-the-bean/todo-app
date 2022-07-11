@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { DndProvider } from 'react-dnd';
+import { createDragDropManager } from 'dnd-core';
 import { TouchBackend } from 'react-dnd-touch-backend';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import './index.css';
@@ -107,10 +108,13 @@ function TodoApp() {
 /** @readonly */
 const TOUCH_KEY = 'isTouchDevice';
 
-/** @readonly */
+/**
+ * @type {{[device: string]: { mobile: bool }}}
+ * @readonly
+ */
 const devices = {
-    desktop: { mobile: false, dndBackend: HTML5Backend },
-    mobile: { mobile: true, dndBackend: TouchBackend },
+    desktop: { mobile: false, dragDropManager: createDragDropManager(HTML5Backend) },
+    mobile: { mobile: true, dragDropManager: createDragDropManager(TouchBackend) },
 };
 
 /** @readonly */
@@ -119,15 +123,17 @@ export const DeviceContext = React.createContext(devices.desktop);
 function App() {
     useVersion();
 
-    const [touch, setTouch] = useState(() => JsonStorage.get(TOUCH_KEY) ?? false);
+    const desktopMinWidth = 1024;
+
+    const [touch, setTouch] = useState(() => JsonStorage.get(TOUCH_KEY) ?? window.screen.width < desktopMinWidth);
     const device = useMemo(() => touch ? devices.mobile : devices.desktop, [touch]);
 
     useEffect(() => JsonStorage.set(TOUCH_KEY, touch), [touch]);
 
     return (
-        <div onTouchStartCapture={() => setTouch(true)}>
+        <div onPointerDownCapture={(event) => setTouch(event.pointerType === 'touch')}>
             <DeviceContext.Provider value={device}>
-                <DndProvider backend={device.dndBackend}>
+                <DndProvider manager={device.dragDropManager}>
                     <TodoApp />
                 </DndProvider>
             </DeviceContext.Provider>
