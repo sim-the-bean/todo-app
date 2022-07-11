@@ -1,4 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { DndProvider } from 'react-dnd';
+import { TouchBackend } from 'react-dnd-touch-backend';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import './index.css';
 import * as UI from './ui/ui';
 import SearchBar from './todo/SearchBar';
@@ -101,10 +104,35 @@ function TodoApp() {
     );
 }
 
+/** @readonly */
+const TOUCH_KEY = 'isTouchDevice';
+
+/** @readonly */
+const devices = {
+    desktop: { mobile: false, dndBackend: HTML5Backend },
+    mobile: { mobile: true, dndBackend: TouchBackend },
+};
+
+/** @readonly */
+export const DeviceContext = React.createContext(devices.desktop);
+
 function App() {
     useVersion();
 
-    return <TodoApp />;
+    const [touch, setTouch] = useState(() => JsonStorage.get(TOUCH_KEY) ?? false);
+    const device = useMemo(() => touch ? devices.mobile : devices.desktop, [touch]);
+
+    useEffect(() => JsonStorage.set(TOUCH_KEY, touch), [touch]);
+
+    return (
+        <div onTouchStartCapture={() => setTouch(true)}>
+            <DeviceContext.Provider value={device}>
+                <DndProvider backend={device.dndBackend}>
+                    <TodoApp />
+                </DndProvider>
+            </DeviceContext.Provider>
+        </div>
+    );
 }
 
 export default App;

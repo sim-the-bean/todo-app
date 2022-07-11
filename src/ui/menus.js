@@ -44,6 +44,7 @@ export function withPopupMenu(Button, Render, options) {
                     className={`flex items-center w-full space-x-1 ${props.className ?? ''}`}
                     onMouseEnter={hideTimeout !== 0 && onMouseEnter}
                     onMouseLeave={hideTimeout !== 0 && onMouseLeave}
+                    {...props.divProps}
                 >
                     {props.children}
                 </div>
