@@ -1,44 +1,48 @@
 import React, { useState, useMemo, useEffect, useContext } from 'react';
+import { DndProvider } from 'react-dnd';
+import { createDragDropManager } from 'dnd-core';
+import { TouchBackend } from 'react-dnd-touch-backend';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import './index.css';
 import * as UI from './ui/ui';
-import CookieNotice from './CookieNotice';
 import SearchBar from './todo/SearchBar';
 import TodoList from './todo/TodoList';
-import { CookieContext, _cookies, TODO_COOKIE, CONSENT_COOKIE } from './misc/cookies';
+import JsonStorage, { TODO_KEY } from './misc/json-storage';
 import { useVersion, VERSION } from './version'
 
-/** @typedef {'red'|'green'|'blue'|'yellow'} Label */
-/** @typedef {{key: number, order: number, description: string, status: bool, labels: Label[]}} Item */
-
 function Title() {
-    return <h1 className="p-4 font-mono font-semibold text-4xl text-zinc-800">
-        Todo
-        <span className="animate-pulse">
-            <span className="text-zinc-600">
-                .
-            </span>
-            <span className="text-zinc-500">
-                .
-            </span>
-            <span className="text-zinc-400">
-                .
-            </span>
-        </span>
-    </h1>;
+    return (
+        <div className="flex-1 w-full">
+            <h1 className="p-4 font-mono font-semibold text-4xl text-zinc-800 dark:text-gray-300">
+                Todo
+                <span className="animate-pulse">
+                    <span className="text-zinc-600 dark:text-gray-500">
+                        .
+                    </span>
+                    <span className="text-zinc-500 dark:text-gray-600">
+                        .
+                    </span>
+                    <span className="text-zinc-400 dark:text-gray-700">
+                        .
+                    </span>
+                </span>
+            </h1>
+        </div>
+    );
 }
 
 function TodoApp() {
-    const cookies = useContext(CookieContext);
+    const { darkMode, setDarkMode } = useContext(DarkModeContext);
 
-    const [todoList, setTodoList] = useState(() => cookies?.get(TODO_COOKIE) ?? []);
+    const [todoList, setTodoList] = useState(() => JsonStorage.get(TODO_KEY) ?? []);
     const [filterWords, setFilterWords] = useState([]);
     const [filterLabel, setFilterLabel] = useState(null);
 
     const nextKey = useMemo(() => todoList.length === 0 ? 1 : todoList[todoList.length - 1].key + 1, [todoList]);
 
     useEffect(
-        () => cookies?.set(TODO_COOKIE, todoList),
-        [todoList, cookies]
+        () => JsonStorage.set(TODO_KEY, todoList),
+        [todoList]
     );
 
     /** 
@@ -54,9 +58,23 @@ function TodoApp() {
     const setTodoLabels = setTodoField('labels');
 
     return (
-        <div className="grid grid-cols-1 justify-center columns-1 w-full min-h-screen bg-stone-50">
-            <main className="flex-1 justify-self-center w-96 m-4 mt-12 mb-0 py-4 space-y-4">
-                <Title />
+        <div className="grid grid-cols-1 justify-center columns-1 w-full min-h-screen bg-stone-50 dark:bg-slate-900">
+            <main className="flex-1 justify-self-center w-5/6 tablet:w-1/2 desktop:w-128 m-4 mt-12 mb-0 py-4 space-y-4">
+                <div className="flex justify-end items-baseline">
+                    <Title />
+                    <div className="flex items-center">
+                        <label
+                            id="darkModeLabel"
+                            htmlFor="darkModeSwitch"
+                            className="flex mr-2 text-base tablet:text-lg text-zinc-700 dark:text-gray-400 font-semibold"
+                        >
+                            Dark mode
+                        </label>
+                        <div className="flex-none">
+                            <UI.Switch id="darkModeSwitch" aria-labelledby="darkModeLabel" checked={darkMode} onClick={() => setDarkMode(!darkMode)} />
+                        </div>
+                    </div>
+                </div>
                 <SearchBar
                     id="searchBar"
                     onSearch={(text) => setFilterWords(text.toLowerCase().split(/\s+/))}
@@ -92,9 +110,12 @@ function TodoApp() {
                     }}
                 />
             </main>
-            <footer className="flex-1 place-self-center mt-2 p-4">
-                <p className="flex-1 place-self-center text-justify text-lg text-zinc-700 font-medium">
-                    Todo&#8230; v{VERSION} &mdash; Copyright 2022 &copy; Simone Walter<br />
+            <footer className="flex-1 place-self-center mt-2 p-4 text-justify text-base tablet:text-lg text-zinc-700 dark:text-gray-400 font-medium">
+                <p className="flex-1 place-self-center">
+                    Todo&#8230; v{VERSION}
+                </p>
+                <p className="flex-1 place-self-center">
+                    Copyright 2022 &copy; Simone Walter<br />
                     <UI.Link href="https://github.com/soycan-sim/todo-app">
                         soycan-sim/todo-app
                     </UI.Link>
@@ -104,25 +125,58 @@ function TodoApp() {
     );
 }
 
+/** @readonly */
+const TOUCH_KEY = 'isTouchDevice';
+
+/** @readonly */
+const DARK_KEY = 'darkMode';
+
+/**
+ * @type {{[device: string]: { mobile: bool }}}
+ * @readonly
+ */
+const devices = {
+    desktop: { mobile: false, dragDropManager: createDragDropManager(HTML5Backend) },
+    mobile: { mobile: true, dragDropManager: createDragDropManager(TouchBackend) },
+};
+
+/** @readonly */
+export const DeviceContext = React.createContext(devices.desktop);
+
+/**
+ * @type {React.Context<{darkMode: bool, setDarkMode: React.Dispatch<bool>}>}
+ * @readonly
+ * */
+export const DarkModeContext = React.createContext(null);
+
 function App() {
     useVersion();
 
-    const [cookiesAccepted, setCookiesAccepted] = useState(() => _cookies.get(CONSENT_COOKIE) === true);
+    const desktopMinWidth = 1024;
 
-    useEffect(
-        () => {
-            if (cookiesAccepted) {
-                _cookies.set(CONSENT_COOKIE, true);
-            }
-        },
-        [cookiesAccepted],
-    );
+    const [touch, setTouch] = useState(() => JsonStorage.get(TOUCH_KEY) ?? window.screen.width < desktopMinWidth);
+    const device = useMemo(() => touch ? devices.mobile : devices.desktop, [touch]);
+
+    useEffect(() => JsonStorage.set(TOUCH_KEY, touch), [touch]);
+
+    /** @type {[bool, React.Dispatch<bool>} */
+    const [darkMode, setDarkMode] = useState(() => JsonStorage.get(DARK_KEY) ?? window.matchMedia('(prefers-color-scheme: dark)').matches);
+    const [darkModeValue, darkModeClass] = useMemo(() => [{ darkMode, setDarkMode }, darkMode ? "dark" : ""], [darkMode]);
+
+    useEffect(() => JsonStorage.set(DARK_KEY, darkMode), [darkMode]);
 
     return (
-        <CookieContext.Provider value={cookiesAccepted ? _cookies : null}>
-            <TodoApp />
-            {!cookiesAccepted && <CookieNotice onClick={() => setCookiesAccepted(true)} />}
-        </CookieContext.Provider>
+        <div onPointerDownCapture={(event) => setTouch(event.pointerType === 'touch')}>
+            <DeviceContext.Provider value={device}>
+                <DndProvider manager={device.dragDropManager}>
+                    <DarkModeContext.Provider value={darkModeValue}>
+                        <div className={darkModeClass}>
+                            <TodoApp />
+                        </div>
+                    </DarkModeContext.Provider>
+                </DndProvider>
+            </DeviceContext.Provider>
+        </div>
     );
 }
 

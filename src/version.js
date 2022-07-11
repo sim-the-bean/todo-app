@@ -1,55 +1,107 @@
 import { useState, useMemo } from 'react';
-import { _cookies, CONSENT_COOKIE, TODO_COOKIE } from './misc/cookies';
+import JsonStorage, { TODO_KEY } from './misc/json-storage';
 
 /** @readonly */
-const VERSION_COOKIE = 'version';
+const VERSION_KEY = 'version';
 
+/** @readonly */
 const UNKNOWN_VERSION = '0.0.0';
 
 /** @readonly */
-export const VERSION = '0.1.0';
+export const VERSION = '0.2.0';
 
-/**
- * @param {string} version 
- * @returns {bool}
- */
-function cookiesPermitted(version) {
-    switch (version) {
-        case '0.1.0':
-            return _cookies.get(CONSENT_COOKIE) === true;
-        default:
-            return !!_cookies.get(CONSENT_COOKIE);
+// legacy constants
+/** @readonly */
+const consent_key = 'essentialCookiesConsent';
+
+function getCookie(name) {
+    if (!document.cookie) {
+        return null;
     }
+
+    const value = document.cookie
+        .split('; ')
+        .map((cookie) => {
+            const parts = cookie.split('=');
+            return [parts[0], parts.slice(1).join('=')];
+        })
+        .find(([key]) => name === decodeURIComponent(key))[1];
+
+    return JSON.parse(decodeURIComponent(value));
+}
+
+function getAllCookies() {
+    if (!document.cookie) {
+        return {};
+    }
+
+    const cookies = {};
+
+    document.cookie
+        .split('; ')
+        .map((cookie) => {
+            const parts = cookie.split('=');
+            return [parts[0], parts.slice(1).join('=')];
+        })
+        .forEach(([key, value]) => cookies[key] = JSON.parse(decodeURIComponent(value)));
+
+    return cookies;
+}
+
+function deleteAllCookies() {
+    if (!document.cookie) {
+        return;
+    }
+
+    document.cookie
+        .split('; ')
+        .map((cookie) => {
+            const parts = cookie.split('=');
+            return parts[0];
+        })
+        .forEach((key) => document.cookie = `${key}=; expires=Thu, 01 Jan 1970 00:00:00 GMT`);
 }
 
 /**
  * @param {string} version 
- * @param {{[key: string]: any}} localData
- * @param {(localData: {[key: string]: any}) => void} setLocalData
  * @returns {?{[key: string]: any}}
  */
-function migrateLocalData(version, localData) {
-    const data = {};
+function migrateLocalData(version) {
+    let data = {};
     switch (version) {
         case VERSION:
             // current version, no need to migrate
             return null;
+        case '0.1.0': {
+            // no data change, only migration to local storage
+            data = getAllCookies();
+            delete data[consent_key];
+
+            deleteAllCookies();
+            break;
+        }
         default: {
-            const list = localData[TODO_COOKIE];
+            const list = getCookie(TODO_KEY);
+            if (!list) {
+                return;
+            }
+
             if (Array.isArray(list[0]) && list[0].length === 2) {
                 const [index, object] = list[0];
                 if (typeof index === 'number' && typeof object === 'object') {
                     // first public version (unnamed)
-                    data[TODO_COOKIE] = list
+                    data[TODO_KEY] = list
                         .map(([index, object]) => ({
                             key: object.key ?? index,
                             description: object.description ?? '',
                             labels: object.labels?.slice() ?? [],
                             status: object.status ?? false,
                         }));
-                    data[CONSENT_COOKIE] = true;
                 }
             }
+
+            deleteAllCookies();
+            break;
         }
     }
     return data;
@@ -57,19 +109,18 @@ function migrateLocalData(version, localData) {
 
 export function useVersion() {
     /** @type string */
-    const lastVersion = useMemo(() => _cookies.get(VERSION_COOKIE) ?? UNKNOWN_VERSION, []);
+    const lastVersion = useMemo(() => JsonStorage.get(VERSION_KEY) ?? getCookie(VERSION_KEY) ?? UNKNOWN_VERSION, []);
     const [currentVersion, setCurrentVersion] = useState(lastVersion);
 
     if (currentVersion !== VERSION) {
-        if (cookiesPermitted(currentVersion)) {
-            const newData = migrateLocalData(currentVersion, _cookies.getAll());
-            if (newData) {
-                Object.entries(newData).forEach(([key, value]) => {
-                    _cookies.set(key, value);
-                });
-            }
-            setCurrentVersion(VERSION);
-            _cookies.set(VERSION_COOKIE, VERSION);
+        const newData = migrateLocalData(currentVersion);
+        console.log(newData);
+        if (newData) {
+            Object.entries(newData).forEach(([key, value]) => {
+                JsonStorage.set(key, value);
+            });
         }
+        setCurrentVersion(VERSION);
+        JsonStorage.set(VERSION_KEY, VERSION);
     }
 }

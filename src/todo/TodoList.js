@@ -1,7 +1,7 @@
-import React, { useState, useMemo, useEffect, useLayoutEffect, useContext } from 'react';
+import React, { useState, useMemo, useEffect, useLayoutEffect } from 'react';
 import '../index.css';
 import * as UI from '../ui/ui';
-import { CookieContext, ORDER_COOKIE } from '../misc/cookies';
+import JsonStorage, { ORDER_KEY } from '../misc/json-storage';
 import TodoItem from './TodoItem';
 import TodoNew from './TodoNew';
 
@@ -14,22 +14,21 @@ import TodoNew from './TodoNew';
  * @param {{list: Item[], name: string}} props
  */
 export function TodoSection(props) {
-    const cookies = useContext(CookieContext);
-    const order_cookie = useMemo(() => `${ORDER_COOKIE}-${props.name}`, [props.name]);
+    const order_key = useMemo(() => `${ORDER_KEY}-${props.name}`, [props.name]);
 
     const [ordering, setOrdering] = useState(() => {
-        const ordering = cookies?.get(order_cookie);
+        /** @type {number[]} */
+        const ordering = JsonStorage.get(order_key);
         if (ordering) {
-            return ordering.map((key) => ({ key, draggable: false }));
+            return ordering;
         } else {
-            return props.list.map((item) => ({ key: item.key, draggable: false }));
+            return props.list.map((item) => item.key);
         }
     });
-    const [dragging, setDragging] = useState(null);
 
     useEffect(
-        () => cookies?.set(order_cookie, ordering.map(({ key }) => key)),
-        [ordering, cookies, order_cookie],
+        () => JsonStorage.set(order_key, ordering),
+        [ordering, order_key],
     );
 
     useLayoutEffect(
@@ -37,39 +36,25 @@ export function TodoSection(props) {
             setOrdering((ordering) => {
                 return ordering
                     .concat(props.list
-                        .filter((item) => ordering.every((ord) => item.key !== ord.key))
-                        .map((item) => ({ key: item.key, draggable: false })));
+                        .filter((item) => ordering.every((ord) => item.key !== ord))
+                        .map((item) => item.key));
             });
         },
         [props.list],
     );
 
     /** 
-     * @param {string} field
-     * @return {(key: number, value: any) => void}
+     * @param {number} key
+     * @return {?number}
      */
-    const setOrderableField = (field) => (key, value) => {
-        setOrdering((ordering) => {
-            const index = ordering.findIndex((ord) => ord.key === key);
-            const newOrdering = ordering.slice();
-            newOrdering[index] = { ...ordering[index], [field]: value };
-            return newOrdering;
-        });
-    };
-
-    const setDraggable = setOrderableField('draggable');
-
+    const getOrder = (key) => ordering.findIndex((ord) => ord === key);
     /** 
      * @param {number} key
-     * @return {number}
+     * @param {number} otherKey
      */
-    const getOrder = (key) => ordering.findIndex((ord) => ord.key === key);
-    /** 
-     * @param {number} key
-     * @param {number} newIndex
-     */
-    const setOrder = (key, newIndex) => {
-        const oldIndex = ordering.findIndex((ord) => ord.key === key);
+    const setOrder = (key, otherKey) => {
+        const oldIndex = getOrder(key);
+        const newIndex = getOrder(otherKey);
 
         if (newIndex < oldIndex) {
             setOrdering((ordering) => [
@@ -88,10 +73,11 @@ export function TodoSection(props) {
         }
     };
 
+    /** @type {Item[]} */
     const list = useMemo(
         () => ordering
-            .map((order) => [props.list.find((item) => item.key === order.key), order])
-            .filter(([item]) => item),
+            .map((order) => props.list.find((item) => item.key === order))
+            .filter((item) => item),
         [ordering, props.list],
     );
 
@@ -103,49 +89,19 @@ export function TodoSection(props) {
         <div
             role="list"
             className="grid grid-cols-1 gap-3 w-full justify-center my-2"
-            onDragOver={(event) => {
-                if (dragging) {
-                    event.preventDefault();
-                }
-            }}
         >
             {
-                list.map(([item, order]) => {
+                list.map((item) => {
                     return (
-                        <div
+                        <TodoItem
                             key={item.key}
-                            className={order.draggable ? "opacity-40" : ""}
-                            draggable={order.draggable}
-                            onDragStart={() => setDragging(item.key)}
-                            onDragEnd={() => {
-                                setDragging(null);
-                                setDraggable(item.key, false);
-                            }}
-                            onDragEnter={(event) => {
-                                if (dragging) {
-                                    const newIndex = getOrder(item.key);
-                                    setOrder(dragging, newIndex);
-                                    event.preventDefault();
-                                }
-                            }}
-                            onDrop={(event) => {
-                                event.preventDefault();
-                            }}
-                        >
-                            <TodoItem
-                                key={item.key}
-                                item={item}
-                                setItemStatus={props.setItemStatus}
-                                deleteItem={props.deleteItem}
-                                toggleLabel={props.toggleLabel}
-                                onDragDown={() => setDraggable(item.key, true)}
-                                onDragUp={() => {
-                                    if (!dragging) {
-                                        setDraggable(item.key, false);
-                                    }
-                                }}
-                            />
-                        </div>
+                            item={item}
+                            name={props.name}
+                            setItemStatus={props.setItemStatus}
+                            deleteItem={props.deleteItem}
+                            toggleLabel={props.toggleLabel}
+                            setOrder={setOrder}
+                        />
                     );
                 })
             }

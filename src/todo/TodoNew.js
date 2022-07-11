@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import '../index.css';
+import { DeviceContext } from '../App';
 import * as UI from '../ui/ui';
 import LABELS from '../misc/labels';
 
@@ -17,6 +18,8 @@ const TodoNew = UI.withPopupMenu(
             onClick={props.onClick} />
     ),
     (props) => {
+        const device = useContext(DeviceContext);
+
         const popup = props.popup;
 
         const [description, setDescription] = useState('');
@@ -32,12 +35,12 @@ const TodoNew = UI.withPopupMenu(
         };
 
         return (
-            <popup.Parent className="relative h-12 p-2 mt-4 mb-3 bg-zinc-50 hover:drop-shadow-sm rounded-lg outline outline-2 outline-zinc-200 hover:outline-slate-400">
+            <popup.Parent className="relative h-12 p-2 mt-4 mb-3 bg-zinc-50 dark:bg-gray-800 hover:drop-shadow-sm rounded-lg outline outline-2 outline-zinc-200 hover:outline-slate-400 dark:outline-gray-700 dark:hover:outline-slate-600">
                 <UI.AddItemButton className="mr-4 ml-1 my-1" onClick={addNew} />
                 <input
                     tabIndex="0"
                     aria-label="New item description"
-                    className="flex-1 py-1 px-3 text-lg rounded-lg outline outline-2 outline-transparent hover:outline-zinc-200 focus:outline-blue-500"
+                    className="flex-1 w-full py-1 px-3 text-lg dark:text-gray-400 dark:bg-slate-700 rounded-lg outline outline-2 outline-transparent hover:outline-zinc-200 focus:outline-blue-500 dark:outline-gray-600 dark:hover:outline-slate-400 dark:focus:outline-blue-400"
                     type="text"
                     value={description}
                     onChange={(event) => setDescription(event.target.value)}
@@ -50,7 +53,7 @@ const TodoNew = UI.withPopupMenu(
                 <popup.Wrapper>
                     <popup.PopupButton className="ml-2" />
                     {
-                        popup.showPopup && <popup.PopupMenu className="h-12 p-2 -ml-1 -mt-2">
+                        popup.showPopup && <popup.PopupMenu vertical={device.mobile} className={device.mobile ? "w-12 p-2 -ml-1 -mt-2" : "h-12 p-2 -ml-1 -mt-2"}>
                             <popup.PopupButton className="ml-1" popup />
                             {
                                 LABELS.map((color) => {
@@ -68,6 +71,9 @@ const TodoNew = UI.withPopupMenu(
                                                 setLabels(labels.filter((l) => l !== color));
                                             } else {
                                                 setLabels([...labels, color]);
+                                            }
+                                            if (device.mobile) {
+                                                popup.setShowPopup(false);
                                             }
                                         }}
                                     />;

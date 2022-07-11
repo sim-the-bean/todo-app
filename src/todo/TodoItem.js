@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useRef, useMemo, useContext } from 'react';
+import { useDrag, useDrop } from 'react-dnd';
 import '../index.css';
+import { DeviceContext } from '../App';
 import * as UI from '../ui/ui';
 import LABELS from '../misc/labels';
 
@@ -20,18 +22,26 @@ export const TodoBox = UI.withPopupMenu(
             onClick={props.onClick} />
     ),
     (props) => {
+        const device = useContext(DeviceContext);
+
         const popup = props.popup;
+        const baseClassName = "relative h-12 p-2 bg-zinc-50 dark:bg-gray-800 hover:drop-shadow-sm rounded-xl outline outline-2 outline-zinc-200 hover:outline-slate-400 dark:outline-gray-700 dark:hover:outline-slate-600";
+        let className = baseClassName;
+        if (props.isDragging) {
+            className = `${baseClassName} opacity-40`;
+        }
         return (
             <popup.Parent
                 role={props.role}
-                className="relative h-12 p-2 bg-zinc-50 hover:drop-shadow-sm rounded-xl outline outline-2 outline-zinc-200 hover:outline-slate-400"
+                className={className}
+                divProps={{ ref: props.dragPreview, 'data-handler-id': props.dataHandlerId }}
             >
-                <UI.ReorderButton className="ml-1 my-1" onMouseDown={props.onDragDown} onMouseUp={props.onDragUp} />
+                <UI.ReorderButton className="ml-1 my-1" drag={props.drag} isDragging={props.isDragging} />
                 {props.children}
                 <popup.Wrapper>
                     <popup.PopupButton className="ml-2" />
                     {
-                        popup.showPopup && <popup.PopupMenu className="h-12 p-2 -ml-1 -mt-2">
+                        popup.showPopup && <popup.PopupMenu vertical={device.mobile} className={device.mobile ? "w-12 p-2 -ml-1 -mt-2" : "h-12 p-2 -ml-1 -mt-2"}>
                             <popup.PopupButton className="ml-1" popup />
                             {
                                 LABELS.map((color) => {
@@ -43,14 +53,24 @@ export const TodoBox = UI.withPopupMenu(
                                         aria-checked={checked}
                                         color={color}
                                         faded={!checked}
-                                        onClick={() => props.toggleLabel(color)}
+                                        onClick={() => {
+                                            props.toggleLabel(color);
+                                            if (device.mobile) {
+                                                popup.setShowPopup(false);
+                                            }
+                                        }}
                                     />;
                                 })
                             }
                             <UI.DeleteButton
                                 role="menuitem"
-                                className="ml-2 mr-2 my-1"
-                                onClick={props.deleteItem}
+                                className={device.mobile ? "ml-1 mt-1" : "ml-2 mr-2 my-1"}
+                                onClick={() => {
+                                    props.deleteItem();
+                                    if (device.mobile) {
+                                        popup.setShowPopup(false);
+                                    }
+                                }}
                             />
                         </popup.PopupMenu>
                     }
@@ -62,29 +82,80 @@ export const TodoBox = UI.withPopupMenu(
 
 /** 
  * A component that represents a new item to be added to the list.
- * @param {{item: Item, deleteItem: () => void, toggleLabel: (key: number, label: Label) => void, setItemStatus: (key: number, status: bool) => void, onDragDown: () => void, onDragUp: () => void}} props 
+ * @param {{item: Item, name: string, deleteItem: () => void, toggleLabel: (key: number, label: Label) => void, setItemStatus: (key: number, status: bool) => void, setOrder: (key: number, otherKey: number) => void}} props 
  */
 export function TodoItem(props) {
+    /** @typedef {{key: number, name: string}} DragItem */
+
+    const type = useMemo(() => `Item-${props.name}`, [props.name]);
+
+    const refDrag = useRef(null);
+    const refDragPreview = useRef(null);
+
+    const [{ handlerId }, drop] = useDrop(
+        () => ({
+            accept: type,
+            /** @param {DragItem} dragItem */
+            hover: (dragItem, monitor) => {
+                const self = props.item.key;
+
+                if (dragItem.key === self) {
+                    return;
+                }
+
+                if (monitor.canDrop()) {
+                    props.setOrder(dragItem.key, self);
+                }
+            },
+            /** @param {DragItem} dragItem */
+            canDrop: (dragItem, _monitor) => {
+                const self = props.name;
+
+                return dragItem.name === self;
+            },
+            collect: (monitor) => ({
+                handlerId: monitor.getHandlerId(),
+            }),
+        }),
+        [type, props.item.key, props.name, props.setOrder],
+    );
+
+    const [{ isDragging }, drag, dragPreview] = useDrag(
+        () => ({
+            type: type,
+            item: () => ({ key: props.item.key, name: props.name }),
+            collect: (monitor) => ({
+                isDragging: monitor.isDragging(),
+            }),
+        }),
+        [type, props.item.key, props.name],
+    );
+
     const item = props.item;
+
+    drag(refDrag);
+    dragPreview(drop(refDragPreview));
 
     return (
         <TodoBox
             id={`todoItem${props.item.key}`}
             role="listitem"
+            isDragging={isDragging}
             deleteItem={() => props.deleteItem(item.key)}
             labels={item.labels}
             toggleLabel={(label) => props.toggleLabel(item.key, label)}
-            onDragDown={props.onDragDown}
-            onDragUp={props.onDragUp}
+            drag={refDrag}
+            dragPreview={refDragPreview}
+            dataHandlerId={handlerId}
         >
             <input
                 aria-label={item.status ? "Mark as in-progress" : "Mark as finished"}
-                className="flex-none h-4 w-5 mx-4 outline outline-2 outline-transparent focus:outline-blue-500"
+                className="flex-none h-4 w-5 mx-4 outline outline-2 outline-transparent focus:outline-blue-500 dark:focus:outline-blue-400"
                 type="checkbox"
                 checked={item.status}
                 onChange={(event) => props.setItemStatus(item.key, event.target.checked)}
             />
-            <span className="flex-1 text-zinc-700 font-medium text-lg">{item.description}</span>
+            <span className="flex-1 text-zinc-700 dark:text-gray-400 font-medium text-base tablet:text-lg truncate">{item.description}</span>
             {
                 item.labels.map((color, index) => {
                     return (
