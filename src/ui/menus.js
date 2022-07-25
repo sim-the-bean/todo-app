@@ -71,7 +71,10 @@ export function withPopupMenu(Button, Render, options) {
                 aria-controls={popupId}
                 className={props.className}
                 popup={props.popup}
-                onClick={() => setShowPopup(!props.popup)}
+                onClick={(event) => {
+                    event.preventDefault();
+                    setShowPopup(!props.popup);
+                }}
             />
         ), [popupId]);
 
