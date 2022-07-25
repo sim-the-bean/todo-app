@@ -13,7 +13,7 @@ import { useVersion, VERSION } from './version'
 function Title() {
     return (
         <div className="flex-1 w-full">
-            <h1 className="p-4 font-mono font-semibold text-4xl text-zinc-800 dark:text-gray-300">
+            <h1 className="p-2 tablet:p-4 font-mono font-semibold text-3xl tablet:text-4xl text-zinc-800 dark:text-gray-300">
                 Todo
                 <span className="animate-pulse">
                     <span className="text-zinc-600 dark:text-gray-500">
