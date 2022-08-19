@@ -35,6 +35,7 @@ export function TodoSection(props) {
         () => {
             setOrdering((ordering) => {
                 return ordering
+                    .filter((ord) => props.list.some((item) => item.key === ord))
                     .concat(props.list
                         .filter((item) => ordering.every((ord) => item.key !== ord))
                         .map((item) => item.key));
