@@ -45,7 +45,7 @@ const TodoNew = UI.withPopupMenu(
                     value={description}
                     onChange={(event) => setDescription(event.target.value)}
                     onKeyDown={(event) => {
-                        if (!event.repeat && event.key === "Enter") {
+                        if (event.key === "Enter" || event.key === "Accept") {
                             addNew();
                         }
                     }}

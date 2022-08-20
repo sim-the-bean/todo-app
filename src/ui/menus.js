@@ -1,11 +1,11 @@
-import React, { useState, useRef, useMemo, useCallback, useContext } from 'react';
+import React, { useState, useRef, useMemo, useCallback, useContext, useLayoutEffect } from 'react';
 import '../index.css';
 import { DeviceContext } from '../App';
 
 /** @typedef {'red'|'green'|'blue'|'yellow'} Label */
 /** @typedef {(props: {className: ?string, children: JSX.Element[]}) => JSX.Element} ParentComponent */
 /** @typedef {(props: any) => JSX.Element} GenericComponent */
-/** @typedef {{popup: bool, onClick: () => void}} PopupButtonProps */
+/** @typedef {{buttonRef: any, popup: bool, onClick: (event: React.MouseEvent) => void}} PopupButtonProps */
 /** @typedef {{hideTimeout: ?number}} PopupOptions */
 /** @typedef {{Parent: ParentComponent, Wrapper: ParentComponent, PopupButton: GenericComponent, PopupMenu: ParentComponent}} PopupRender */
 
@@ -62,21 +62,33 @@ export function withPopupMenu(Button, Render, options) {
             </div>
         ), []);
 
-        const PopupButton = useCallback((props) => (
-            <Button
-                aria-label={props['aria-label'] ?? "Toggle popup menu"}
-                aria-haspopup="menu"
-                aria-expanded={props.popup}
-                aria-checked={props['aria-checked']}
-                aria-controls={popupId}
-                className={props.className}
-                popup={props.popup}
-                onClick={(event) => {
-                    event.preventDefault();
-                    setShowPopup(!props.popup);
-                }}
-            />
-        ), [popupId]);
+        const PopupButton = useCallback((props) => {
+            /** @type {{current: HTMLElement?}} */
+            const buttonRef = useRef(null);
+
+            useLayoutEffect(() => {
+                if (buttonRef.current && props.popup) {
+                    buttonRef.current.focus();
+                }
+            }, [props.popup]);
+
+            return (
+                <Button
+                    buttonRef={buttonRef}
+                    aria-label={props['aria-label'] ?? "Toggle popup menu"}
+                    aria-haspopup="menu"
+                    aria-expanded={props.popup}
+                    aria-checked={props['aria-checked']}
+                    aria-controls={popupId}
+                    className={props.className}
+                    popup={props.popup}
+                    onClick={(event) => {
+                        event.preventDefault();
+                        setShowPopup(!props.popup);
+                    }}
+                />
+            );
+        }, [popupId]);
 
         const PopupMenu = useCallback((props) => {
             const ariaOrientation = props.vertical ? "vertical" : "horizontal";
@@ -87,6 +99,7 @@ export function withPopupMenu(Button, Render, options) {
                 className = "absolute z-10 flex items-center space-x-1 bg-zinc-200 dark:bg-slate-800 hover:drop-shadow-lg rounded-lg outline outline-2 outline-zinc-300 dark:outline-gray-700 dark:hover:outline-slate-600";
             }
             className = `${className} ${props.className ?? ''}`;
+
             return <div
                 id={popupId}
                 role="menu"

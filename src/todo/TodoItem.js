@@ -1,4 +1,4 @@
-import React, { useRef, useMemo, useContext } from 'react';
+import React, { useState, useRef, useMemo, useContext } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import '../index.css';
 import { DeviceContext } from '../App';
@@ -14,18 +14,20 @@ import LABELS from '../misc/labels';
 export const TodoBox = UI.withPopupMenu(
     (props) => (
         <UI.MenuButton
+            buttonRef={props.buttonRef}
             aria-haspopup={props['aria-haspopup']}
             aria-expanded={props['aria-expanded']}
             aria-checked={props['aria-checked']}
             className={`my-1 ${props.className ?? ''} ${props.popup ? "mr-2" : ""}`}
             popup={props.popup}
-            onClick={props.onClick} />
+            onClick={props.onClick}
+        />
     ),
     (props) => {
         const device = useContext(DeviceContext);
 
         const popup = props.popup;
-        const baseClassName = "relative h-12 p-2 bg-zinc-50 dark:bg-gray-800 hover:drop-shadow-sm rounded-xl outline outline-2 outline-zinc-200 hover:outline-slate-400 dark:outline-gray-700 dark:hover:outline-slate-600";
+        const baseClassName = "relative p-2 bg-zinc-50 dark:bg-gray-800 hover:drop-shadow-sm rounded-xl outline outline-2 outline-zinc-200 hover:outline-slate-400 dark:outline-gray-700 dark:hover:outline-slate-600";
         let className = baseClassName;
         if (props.isDragging) {
             className = `${baseClassName} opacity-40`;
@@ -87,7 +89,10 @@ export const TodoBox = UI.withPopupMenu(
 export function TodoItem(props) {
     /** @typedef {{key: number, name: string}} DragItem */
 
+    const device = useContext(DeviceContext);
+
     const type = useMemo(() => `Item-${props.name}`, [props.name]);
+    const [expanded, setExpanded] = useState(false);
 
     const refDrag = useRef(null);
     const refDragPreview = useRef(null);
@@ -155,7 +160,14 @@ export function TodoItem(props) {
                 checked={item.status}
                 onChange={(event) => props.setItemStatus(item.key, event.target.checked)}
             />
-            <span className="flex-1 text-zinc-700 dark:text-gray-400 font-medium text-base tablet:text-lg truncate">{item.description}</span>
+            <span
+                className={`flex-1 text-zinc-700 dark:text-gray-400 font-medium text-base tablet:text-lg ${expanded ? 'text-justify py-0.5' : 'truncate'}`}
+                onMouseEnter={() => setExpanded(true)}
+                onMouseLeave={() => setExpanded(false)}
+                onClick={device.mobile ? () => setExpanded((value) => !value) : null}
+            >
+                {item.description}
+            </span>
             {
                 item.labels.map((color, index) => {
                     return (
