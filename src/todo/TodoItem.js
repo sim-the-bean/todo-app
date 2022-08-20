@@ -14,12 +14,14 @@ import LABELS from '../misc/labels';
 export const TodoBox = UI.withPopupMenu(
     (props) => (
         <UI.MenuButton
+            buttonRef={props.buttonRef}
             aria-haspopup={props['aria-haspopup']}
             aria-expanded={props['aria-expanded']}
             aria-checked={props['aria-checked']}
             className={`my-1 ${props.className ?? ''} ${props.popup ? "mr-2" : ""}`}
             popup={props.popup}
-            onClick={props.onClick} />
+            onClick={props.onClick}
+        />
     ),
     (props) => {
         const device = useContext(DeviceContext);
