@@ -8,7 +8,7 @@ const VERSION_KEY = 'version';
 const UNKNOWN_VERSION = '0.0.0';
 
 /** @readonly */
-export const VERSION = '0.2.0';
+export const VERSION = '0.2.3';
 
 // legacy constants
 /** @readonly */
@@ -76,7 +76,8 @@ function migrateLocalData(version) {
     let data = {};
     switch (version) {
         case VERSION:
-            // current version, no need to migrate
+        case '0.2.0':
+            // current or recent version, no need to migrate
             return null;
         case '0.1.0': {
             // no data change, only migration to local storage
