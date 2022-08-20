@@ -5,7 +5,7 @@ import { Tag } from './ui';
 
 /** @typedef {'red'|'green'|'blue'|'yellow'} Label */
 /** @typedef {(props: any) => JSX.Element} GenericComponent */
-/** @typedef {{className: ?string, onClick: (event: React.MouseEvent) => void, onMouseDown: (event: React.MouseEvent) => void, onMouseUp: (event: React.MouseEvent) => void, onPointerDown: (event: React.PointerEvent) => void, onPointerUp: (event: React.PointerEvent) => void}} ButtonProps */
+/** @typedef {{buttonRef: any, className: ?string, onClick: (event: React.MouseEvent) => void, onMouseDown: (event: React.MouseEvent) => void, onMouseUp: (event: React.MouseEvent) => void, onPointerDown: (event: React.PointerEvent) => void, onPointerUp: (event: React.PointerEvent) => void}} ButtonProps */
 /** @typedef {(props: ButtonProps) => JSX.Element} ButtonComponent */
 /** @typedef {{onClick: ?(event: React.MouseEvent) => void, additionalIconClass: ?string, ariaLabel: ?string}} ButtonOptions */
 /** @typedef {{checked: bool, id: ?string, onClick: ?(event: React.MouseEvent) => void, className: ?string}} SwitchProps */
@@ -19,6 +19,7 @@ export function button(Icon, options) {
     const { onClick, additionalIconClass: additionalClass } = { additionalIconClass: "text-slate-400 hover:text-slate-900 dark:text-gray-500 dark:hover:text-gray-300", ...(options ?? {}) }
     return (props) => (
         <button
+            ref={props.buttonRef}
             role={props.role}
             aria-label={props['aria-label'] ?? options.ariaLabel}
             aria-haspopup={props['aria-haspopup']}
