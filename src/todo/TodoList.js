@@ -89,7 +89,7 @@ export function TodoSection(props) {
     return (
         <div
             role="list"
-            className="grid grid-cols-1 gap-3 w-full justify-center my-2"
+            className="flex-none flex flex-col gap-3 w-full justify-center my-2"
         >
             {
                 list.map((item) => {
@@ -144,7 +144,7 @@ export function TodoList(props) {
     );
 
     return (
-        <div className="grid grid-cols-1 gap-1 w-full justify-center">
+        <div className="flex-none flex flex-col gap-1 w-full justify-center">
             <TodoNew
                 id="todoNew"
                 addNewItem={props.addNewItem}

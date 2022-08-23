@@ -100,7 +100,7 @@ export function ReorderButton(props) {
         <div
             tabIndex="0"
             aria-label="Drag to reorder"
-            className={`flex outline outline-2 outline-transparent focus:outline-blue-500 dark:focus:outline-blue-400 ${props.isDragging ? 'cursor-grabbing' : 'cursor-grab'} ${props.className ?? ''}`}
+            className={`outline outline-2 outline-transparent focus:outline-blue-500 dark:focus:outline-blue-400 ${props.isDragging ? 'cursor-grabbing' : 'cursor-grab'} ${props.className ?? ''}`}
             ref={props.drag}
         >
             <SelectorIcon className="flex-none h-6 text-slate-400 hover:text-slate-900 dark:text-gray-500 dark:hover:text-gray-300" />
