@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo, useCallback, useContext, useLayoutEffect } from 'react';
+import React, { useState, useRef, useMemo, useCallback, useContext } from 'react';
 import '../index.css';
 import { DeviceContext } from '../App';
 
@@ -63,18 +63,8 @@ export function withPopupMenu(Button, Render, options) {
         ), []);
 
         const PopupButton = useCallback((props) => {
-            /** @type {{current: HTMLElement?}} */
-            const buttonRef = useRef(null);
-
-            useLayoutEffect(() => {
-                if (buttonRef.current && props.popup) {
-                    buttonRef.current.focus();
-                }
-            }, [props.popup]);
-
             return (
                 <Button
-                    buttonRef={buttonRef}
                     aria-label={props['aria-label'] ?? "Toggle popup menu"}
                     aria-haspopup="menu"
                     aria-expanded={props.popup}
